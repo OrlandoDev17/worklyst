@@ -1,0 +1,15 @@
+server:
+  port: 30200
+
+database:
+  path: ./data/database.sqlite
+
+jwt:
+  accessTokenSecret: your_access_token_secret_change_in_production
+  refreshTokenSecret: your_refresh_token_secret_change_in_production
+  accessTokenExpiry: 15m
+  refreshTokenExpiry: 7d
+
+cors:
+  enabled: true
+  origin: "*"
