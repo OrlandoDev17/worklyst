@@ -2,13 +2,47 @@
 
 import AuthHeader from "@/components/auth/AuthHeader";
 import { LOGIN_FIELDS } from "@/lib/constants";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { FadeUp } from "@/lib/animations";
+import { useRouter } from "next/navigation";
 
 export default function Login() {
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
+  });
+  const [logged, setLogged] = useState(false);
+
+  const router = useRouter();
+
   useEffect(() => {
     FadeUp();
   }, []);
+
+  useEffect(() => {
+    if (logged) {
+      router.push("/");
+    }
+  }, [logged]);
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    try {
+      const response = await fetch("http://localhost:30200/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await response.json();
+      console.log(data);
+      setLogged(true);
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
   return (
     <main className="bg-background h-screen flex flex-col items-center justify-center">
@@ -24,7 +58,10 @@ export default function Login() {
               Ingresa tus credenciales para acceder a tus proyectos
             </p>
           </div>
-          <form className="mt-4 flex flex-col gap-4 w-full">
+          <form
+            onSubmit={handleSubmit}
+            className="mt-4 flex flex-col gap-4 w-full"
+          >
             {LOGIN_FIELDS.map(({ name, type, placeholder, label }) => (
               <label key={name} className="flex flex-col gap-1">
                 <span>{label}</span>
@@ -34,6 +71,12 @@ export default function Login() {
                   type={type}
                   name={name}
                   placeholder={placeholder}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      [name]: e.target.value,
+                    })
+                  }
                 />
               </label>
             ))}

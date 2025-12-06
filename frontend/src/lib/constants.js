@@ -15,7 +15,7 @@ export const LOGIN_FIELDS = [
 
 export const REGISTER_FIELDS = [
   {
-    name: "name",
+    name: "usuario",
     type: "text",
     placeholder: "Orlando López",
     label: "Nombre Completo",
@@ -31,11 +31,5 @@ export const REGISTER_FIELDS = [
     type: "password",
     placeholder: "Minimo 6 caracteres",
     label: "Contraseña",
-  },
-  {
-    name: "confirm-password",
-    type: "password",
-    placeholder: "Repite tu contraseña",
-    label: "Confirmar Contraseña",
   },
 ];

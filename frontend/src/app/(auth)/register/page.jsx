@@ -4,11 +4,35 @@ import AuthHeader from "@/components/auth/AuthHeader";
 import { REGISTER_FIELDS } from "@/lib/constants";
 import { useEffect } from "react";
 import { FadeUp } from "@/lib/animations";
+import { useState } from "react";
 
 export default function Register() {
+  const [formData, setFormData] = useState({
+    usuario: "",
+    email: "",
+    password: "",
+  });
+
   useEffect(() => {
     FadeUp();
   }, []);
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    try {
+      const response = await fetch("http://localhost:30200/api/auth/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+      const data = await response.json();
+      console.log(data);
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
   return (
     <main className="bg-background h-screen flex flex-col items-center justify-center">
@@ -24,7 +48,10 @@ export default function Register() {
               Completa tus datos para comenzar tu experiencia
             </p>
           </div>
-          <form className="mt-4 flex flex-col gap-4 w-full">
+          <form
+            className="mt-4 flex flex-col gap-4 w-full"
+            onSubmit={handleSubmit}
+          >
             {REGISTER_FIELDS.map(({ name, type, placeholder, label }) => (
               <label key={name} className="flex flex-col gap-1">
                 <span>{label}</span>
@@ -34,6 +61,12 @@ export default function Register() {
                   type={type}
                   name={name}
                   placeholder={placeholder}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      [name]: e.target.value,
+                    })
+                  }
                 />
               </label>
             ))}
