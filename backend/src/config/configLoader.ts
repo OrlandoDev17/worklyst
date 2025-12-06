@@ -7,7 +7,15 @@ interface Configuracion {
         port: number;
     };
     database: {
-        path: string;
+        tipo: 'sqlite' | 'postgres';
+        // SQLite
+        path?: string;
+        // PostgreSQL
+        host?: string;
+        port?: number;
+        database?: string;
+        user?: string;
+        password?: string;
     };
     jwt: {
         accessTokenSecret: string;

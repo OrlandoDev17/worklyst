@@ -9,7 +9,7 @@ export interface Usuario {
     created_at?: string;
 }
 
-export const inicializarTablaUsuarios = () => {
+export const inicializarTablaUsuarios = async () => {
     const sql = `
         CREATE TABLE IF NOT EXISTS users (
             id TEXT PRIMARY KEY,
@@ -19,10 +19,10 @@ export const inicializarTablaUsuarios = () => {
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP
         )
     `;
-    ejecutar(sql);
+    await ejecutar(sql);
 };
 
-export const inicializarTablaRefreshTokens = () => {
+export const inicializarTablaRefreshTokens = async () => {
     const sql = `
         CREATE TABLE IF NOT EXISTS refresh_tokens (
             id TEXT PRIMARY KEY,
@@ -33,50 +33,50 @@ export const inicializarTablaRefreshTokens = () => {
             FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
         )
     `;
-    ejecutar(sql);
+    await ejecutar(sql);
 };
 
-export const guardarRefreshToken = (idUsuario: string, token: string, expiraEn: Date) => {
+export const guardarRefreshToken = async (idUsuario: string, token: string, expiraEn: Date) => {
     const id = uuidv4();
     const sql = `
         INSERT INTO refresh_tokens (id, user_id, token, expires_at)
         VALUES (?, ?, ?, ?)
     `;
-    ejecutar(sql, [id, idUsuario, token, expiraEn.toISOString()]);
+    await ejecutar(sql, [id, idUsuario, token, expiraEn.toISOString()]);
     return { id, idUsuario, token, expiraEn };
 };
 
-export const buscarRefreshToken = (token: string) => {
+export const buscarRefreshToken = async (token: string) => {
     const sql = `
         SELECT * FROM refresh_tokens 
         WHERE token = ? AND expires_at > datetime('now')
     `;
-    return obtener(sql, [token]);
+    return await obtener(sql, [token]);
 };
 
-export const eliminarRefreshToken = (token: string) => {
+export const eliminarRefreshToken = async (token: string) => {
     const sql = `DELETE FROM refresh_tokens WHERE token = ?`;
-    ejecutar(sql, [token]);
+    await ejecutar(sql, [token]);
 };
 
-export const eliminarRefreshTokensUsuario = (idUsuario: string) => {
+export const eliminarRefreshTokensUsuario = async (idUsuario: string) => {
     const sql = `DELETE FROM refresh_tokens WHERE user_id = ?`;
-    ejecutar(sql, [idUsuario]);
+    await ejecutar(sql, [idUsuario]);
 };
 
-export const crearUsuario = (usuario: Omit<Usuario, 'id' | 'created_at'>) => {
+export const crearUsuario = async (usuario: Omit<Usuario, 'id' | 'created_at'>) => {
     const id = uuidv4();
     const sql = `
         INSERT INTO users (id, name, email, password)
         VALUES (?, ?, ?, ?)
     `;
-    ejecutar(sql, [id, usuario.usuario, usuario.email, usuario.password]);
+    await ejecutar(sql, [id, usuario.usuario, usuario.email, usuario.password]);
     return { id, nombre: usuario.usuario, email: usuario.email };
 };
 
-export const buscarUsuarioPorEmail = (email: string): Usuario | undefined => {
+export const buscarUsuarioPorEmail = async (email: string): Promise<Usuario | undefined> => {
     const sql = `SELECT * FROM users WHERE email = ?`;
-    const resultado = obtener(sql, [email]) as any;
+    const resultado = await obtener(sql, [email]) as any;
     if (!resultado) return undefined;
 
     return {

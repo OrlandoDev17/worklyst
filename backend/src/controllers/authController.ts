@@ -36,14 +36,14 @@ export const registrar = async (req: Request, res: Response): Promise<void> => {
         return;
     }
 
-    const usuarioExistente = buscarUsuarioPorEmail(email);
+    const usuarioExistente = await buscarUsuarioPorEmail(email);
     if (usuarioExistente) {
         res.status(400).json({ mensaje: 'El usuario ya existe' });
         return;
     }
 
     const passwordHasheado = await bcrypt.hash(password, 10);
-    const nuevoUsuario = crearUsuario({ usuario, email, password: passwordHasheado });
+    const nuevoUsuario = await crearUsuario({ usuario, email, password: passwordHasheado });
 
     res.status(201).json({ mensaje: 'Usuario registrado exitosamente', usuario: nuevoUsuario });
 };
@@ -56,7 +56,7 @@ export const iniciarSesion = async (req: Request, res: Response): Promise<void> 
         return;
     }
 
-    const usuario = buscarUsuarioPorEmail(email);
+    const usuario = await buscarUsuarioPorEmail(email);
     if (!usuario || !usuario.password) {
         res.status(401).json({ mensaje: 'Credenciales inválidas' });
         return;
@@ -84,7 +84,7 @@ export const iniciarSesion = async (req: Request, res: Response): Promise<void> 
 
     // Guardar refresh token en la base de datos
     const expiraEn = obtenerFechaExpiracion(EXPIRACION_REFRESH_TOKEN);
-    guardarRefreshToken(usuario.id, tokenActualizacion, expiraEn);
+    await guardarRefreshToken(usuario.id, tokenActualizacion, expiraEn);
 
     res.json({
         mensaje: 'Login exitoso',
@@ -107,7 +107,7 @@ export const renovarToken = async (req: Request, res: Response): Promise<void> =
         const decodificado = jwt.verify(tokenActualizacion, SECRET_REFRESH_TOKEN) as { id: string; email: string };
 
         // Verificar si el refresh token existe en la base de datos y no ha expirado
-        const tokenAlmacenado = buscarRefreshToken(tokenActualizacion);
+        const tokenAlmacenado = await buscarRefreshToken(tokenActualizacion);
         if (!tokenAlmacenado) {
             res.status(401).json({ mensaje: 'Refresh token inválido o expirado' });
             return;
@@ -138,7 +138,7 @@ export const cerrarSesion = async (req: Request, res: Response): Promise<void> =
     }
 
     // Eliminar refresh token de la base de datos
-    eliminarRefreshToken(tokenActualizacion);
+    await eliminarRefreshToken(tokenActualizacion);
 
     res.json({ mensaje: 'Logout exitoso' });
 };
