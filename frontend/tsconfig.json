@@ -32,7 +32,10 @@
     ".next/dev/types/**/*.ts",
     "**/*.mts",
     "app/(auth)/register/page.jsx",
-    "app/(auth)/login/page.jsx"
+    "app/(auth)/login/page.jsx",
+    "src/hooks/useLogin.ts",
+    "src/app/page.jsx",
+    "src/components/layout/Routerlayout.jsx"
   ],
   "exclude": ["node_modules"]
 }

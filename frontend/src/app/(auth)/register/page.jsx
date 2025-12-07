@@ -5,6 +5,8 @@ import { REGISTER_FIELDS } from "@/lib/constants";
 import { useEffect } from "react";
 import { FadeUp } from "@/lib/animations";
 import { useState } from "react";
+import { useAuth } from "@/context/AuthContext";
+import { useRouter } from "next/navigation";
 
 export default function Register() {
   const [formData, setFormData] = useState({
@@ -13,25 +15,23 @@ export default function Register() {
     password: "",
   });
 
+  const router = useRouter();
+
+  const { register, error, loading, success } = useAuth();
+
+  useEffect(() => {
+    if (success) {
+      router.push("/login");
+    }
+  }, [success]);
+
   useEffect(() => {
     FadeUp();
   }, []);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    try {
-      const response = await fetch("http://localhost:30200/api/auth/register", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
-      });
-      const data = await response.json();
-      console.log(data);
-    } catch (error) {
-      console.log(error);
-    }
+    register(formData);
   };
 
   return (
@@ -70,11 +70,20 @@ export default function Register() {
                 />
               </label>
             ))}
+            {error && <p className="text-red-500 mt-2 text-sm">{error}</p>}
+            {success && (
+              <p className="text-green-500 mt-2 text-sm">
+                Cuenta creada exitosamente
+              </p>
+            )}
             <button
-              className="w-full mt-2 py-3 bg-blue-400 text-white font-medium rounded-xl
-                  hover:bg-blue-500 hover:-translate-y-1 transition-all cursor-pointer"
+              className={`w-full mt-2 py-3 bg-blue-400 text-white font-medium rounded-xl
+                  hover:bg-blue-500 hover:-translate-y-1 transition-all cursor-pointer ${
+                    loading ? "opacity-50 cursor-not-allowed" : ""
+                  }`}
+              disabled={loading}
             >
-              Crea tu cuenta
+              {loading ? "Cargando..." : "Crea tu cuenta"}
             </button>
           </form>
           <span className="text-center mt-2 text-gray-600">

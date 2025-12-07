@@ -4,44 +4,32 @@ import AuthHeader from "@/components/auth/AuthHeader";
 import { LOGIN_FIELDS } from "@/lib/constants";
 import { useEffect, useState } from "react";
 import { FadeUp } from "@/lib/animations";
+import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 
 export default function Login() {
+  const router = useRouter();
+
   const [formData, setFormData] = useState({
     email: "",
     password: "",
   });
-  const [logged, setLogged] = useState(false);
 
-  const router = useRouter();
+  const { error, loading, success, login, user } = useAuth();
 
   useEffect(() => {
     FadeUp();
   }, []);
 
   useEffect(() => {
-    if (logged) {
+    if (success) {
       router.push("/");
     }
-  }, [logged]);
+  }, [success]);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    try {
-      const response = await fetch("http://localhost:30200/api/auth/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
-      });
-
-      const data = await response.json();
-      console.log(data);
-      setLogged(true);
-    } catch (error) {
-      console.log(error);
-    }
+    login(formData);
   };
 
   return (
@@ -80,12 +68,20 @@ export default function Login() {
                 />
               </label>
             ))}
+            {error && <p className="text-red-500">{error.mensaje}</p>}
+            {success ? (
+              <p className="text-green-500">Iniciaste sesión correctamente</p>
+            ) : (
+              ""
+            )}
             <button
+              disabled={loading}
               className="w-full mt-2 py-3 bg-blue-400 text-white font-medium rounded-xl
-            hover:bg-blue-500 hover:-translate-y-1 transition-all cursor-pointer"
+            hover:bg-blue-500 hover:-translate-y-1 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Iniciar Sesión
+              {loading ? "Iniciando sesión..." : "Iniciar Sesión"}
             </button>
+            <span>{user?.nombre}</span>
           </form>
           <span className="text-center mt-2 text-gray-600">
             ¿No tienes una cuenta?{" "}
