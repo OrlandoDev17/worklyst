@@ -33,3 +33,18 @@ export const REGISTER_FIELDS = [
     label: "Contraseña",
   },
 ];
+
+export const NAV_ITEMS = [
+  {
+    label: "Inicio",
+    href: "/",
+  },
+  {
+    label: "Proyectos",
+    href: "/projects",
+  },
+  {
+    label: "Chatbot",
+    href: "/chatbot",
+  },
+];
