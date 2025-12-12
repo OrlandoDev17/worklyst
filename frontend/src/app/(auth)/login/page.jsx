@@ -3,7 +3,6 @@
 import AuthHeader from "@/components/auth/AuthHeader";
 import { LOGIN_FIELDS } from "@/lib/constants";
 import { useEffect, useState } from "react";
-import { FadeUp } from "@/lib/animations";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 
@@ -18,14 +17,10 @@ export default function Login() {
   const { error, loading, success, login, user } = useAuth();
 
   useEffect(() => {
-    FadeUp();
-  }, []);
-
-  useEffect(() => {
     if (success) {
       router.push("/");
     }
-  }, [success]);
+  }, [success, router]);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
