@@ -2,7 +2,17 @@ server:
   port: 30200
 
 database:
+  tipo: sqlite  # Opciones: sqlite | postgres
+  
+  # Configuración para SQLite
   path: ./data/database.sqlite
+  
+  # Configuración para PostgreSQL (descomentar si tipo=postgres)
+  # host: localhost
+  # port: 5432
+  # database: worklyst
+  # user: postgres
+  # password: password
 
 jwt:
   accessTokenSecret: your_access_token_secret_change_in_production
