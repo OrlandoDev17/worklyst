@@ -7,10 +7,9 @@ interface Configuracion {
         port: number;
     };
     database: {
-        tipo: 'sqlite' | 'postgres';
-        // SQLite
-        path?: string;
-        // PostgreSQL
+        // Opción 1: Connection string (recomendado para Supabase)
+        connectionString?: string;
+        // Opción 2: Parámetros individuales
         host?: string;
         port?: number;
         database?: string;

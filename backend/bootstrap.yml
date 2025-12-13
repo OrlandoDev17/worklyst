@@ -2,12 +2,13 @@ server:
   port: 30200
 
 database:
-  tipo: sqlite  # Opciones: sqlite | postgres
+  # Opción 1: Connection String (Supabase)
+  # Obtener de: Supabase Dashboard → Project Settings → Database → Connection String (URI)
+  # Formato: postgresql://postgres:[YOUR-PASSWORD]@[HOST]:[PORT]/postgres
+  connectionString: postgresql://postgres:!pojw2312.@db.uprmyeywdvxiaqoandkb.supabase.co:5432/postgres
   
-  # Configuración para SQLite
-  path: ./data/database.sqlite
-  
-  # Configuración para PostgreSQL (descomentar si tipo=postgres)
+  # Opción 2: Parámetros individuales
+  # Descomentar y comentar connectionString para usar esta opción
   # host: localhost
   # port: 5432
   # database: worklyst

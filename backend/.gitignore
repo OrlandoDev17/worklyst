@@ -10,12 +10,13 @@ build/
 .env
 .env.local
 .env.*.local
+bootstrap.yml
 
 # Database
-# data/*.sqlite
-# data/*.db
-# *.sqlite
-# *.db
+data/*.sqlite
+data/*.db
+*.sqlite
+*.db
 
 # Logs
 logs/
