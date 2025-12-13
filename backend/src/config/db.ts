@@ -55,6 +55,3 @@ export const obtener = (sql: string, params: any[] = []) => {
 
 // Exportar la conexión para acceso directo si es necesario
 export default conexionBD;
-
-
-

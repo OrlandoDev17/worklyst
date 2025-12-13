@@ -5,7 +5,8 @@ import obtenerConfig from './config/configLoader';
 const config = obtenerConfig();
 
 const app = express();
-const puerto = config.server.port;
+
+const puerto = process.env.PORT || config.server.port;
 
 app.use(cors());
 app.use(express.json());
