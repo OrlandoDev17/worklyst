@@ -12,10 +12,10 @@ build/
 .env.*.local
 
 # Database
-data/*.sqlite
-data/*.db
-*.sqlite
-*.db
+# data/*.sqlite
+# data/*.db
+# *.sqlite
+# *.db
 
 # Logs
 logs/
