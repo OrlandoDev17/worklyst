@@ -18,6 +18,10 @@ app.get('/prueba', (req: Request, res: Response) => {
 // Conexión a la base de datos
 import db from './config/db';
 import rutasAuth from './routes/authRoutes';
+import { inicializarTablas } from './config/database/init';
+
+// Inicializar tablas
+inicializarTablas().catch(console.error);
 
 // Rutas
 app.use('/api/auth', rutasAuth);

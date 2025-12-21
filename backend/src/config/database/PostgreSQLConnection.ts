@@ -16,13 +16,14 @@ export class PostgreSQLConnection {
         user?: string;
         password?: string;
     }) {
+        const usarSSL = process.env.DB_SSL === 'true';
+        const sslConfig = usarSSL ? { rejectUnauthorized: false } : undefined;
+
         // Si hay connection string, usarla (preferido para Supabase)
         if (config.connectionString) {
             this.config = {
                 connectionString: config.connectionString,
-                ssl: {
-                    rejectUnauthorized: false // Necesario para Supabase
-                }
+                ssl: sslConfig
             };
         } else {
             // De lo contrario, usar parámetros individuales
@@ -32,9 +33,7 @@ export class PostgreSQLConnection {
                 database: config.database,
                 user: config.user,
                 password: config.password,
-                ssl: {
-                    rejectUnauthorized: false // Necesario para Supabase
-                }
+                ssl: sslConfig
             };
         }
     }

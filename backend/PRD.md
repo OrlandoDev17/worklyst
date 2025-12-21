@@ -3,7 +3,7 @@
 
 ---
 
-## 📋 Resumen Ejecutivo
+## Resumen Ejecutivo
 
 **Nombre del Producto:** Worklist Backend API  
 **Versión:** 1.0.0  
@@ -24,7 +24,7 @@ API REST backend desarrollada con TypeScript y Express que proporciona servicios
 
 ---
 
-## 🎯 Objetivos de Negocio
+## Objetivos de Negocio
 
 ### Problemas que Resuelve
 
@@ -42,7 +42,7 @@ API REST backend desarrollada con TypeScript y Express que proporciona servicios
 
 ---
 
-## 👥 Usuarios y Stakeholders
+## Usuarios y Stakeholders
 
 ### Usuarios Primarios
 
@@ -57,7 +57,7 @@ API REST backend desarrollada con TypeScript y Express que proporciona servicios
 
 ---
 
-## 🏗️ Arquitectura Técnica
+## Arquitectura Técnica
 
 ### Stack Tecnológico
 
@@ -114,7 +114,7 @@ backend/
 
 ---
 
-## ⚙️ Configuración del Sistema
+## Configuración del Sistema
 
 ### bootstrap.yml
 
@@ -139,14 +139,14 @@ cors:
 ```
 
 **Ventajas del Enfoque YAML:**
-- ✅ Separación de configuración y código
-- ✅ Fácil modificación sin recompilar
-- ✅ Soporte para múltiples entornos (dev, staging, prod)
-- ✅ Formato legible y estándar en la industria
+- Separación de configuración y código
+- Fácil modificación sin recompilar
+- Soporte para múltiples entornos (dev, staging, prod)
+- Formato legible y estándar en la industria
 
 ---
 
-## 🗄️ Modelo de Datos
+## Modelo de Datos
 
 ### Esquema de Base de Datos
 
@@ -207,7 +207,7 @@ erDiagram
 
 ---
 
-## 🔌 Especificación de API
+## Especificación de API
 
 ### Base URL
 
@@ -258,7 +258,7 @@ http://localhost:30200
 
 ---
 
-#### 2️⃣ Iniciar Sesión
+#### Iniciar Sesión
 
 **Propósito:** Autenticar usuario y generar tokens de acceso.
 
@@ -309,7 +309,7 @@ http://localhost:30200
 
 ---
 
-#### 3️⃣ Renovar Access Token
+#### Renovar Access Token
 
 **Propósito:** Obtener un nuevo Access Token sin requerir login.
 
@@ -342,7 +342,7 @@ http://localhost:30200
 
 ---
 
-#### 4️⃣ Cerrar Sesión
+#### Cerrar Sesión
 
 **Propósito:** Invalidar Refresh Token y cerrar sesión del usuario.
 
