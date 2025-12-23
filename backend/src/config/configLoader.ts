@@ -39,33 +39,42 @@ export const cargarConfiguracion = (): Configuracion => {
 
     try {
         const rutaConfig = path.resolve(__dirname, '../../bootstrap.yml');
-        const contenidoArchivo = fs.readFileSync(rutaConfig, 'utf8');
-        const archivoConfig = yaml.load(contenidoArchivo) as Configuracion;
+        let archivoConfig: any = {};
+
+        if (fs.existsSync(rutaConfig)) {
+            const contenidoArchivo = fs.readFileSync(rutaConfig, 'utf8');
+            archivoConfig = yaml.load(contenidoArchivo);
+        }
+
+        const serverConfig = archivoConfig?.server || {};
+        const databaseConfig = archivoConfig?.database || {};
+        const jwtConfig = archivoConfig?.jwt || {};
+        const corsConfig = archivoConfig?.cors || {};
 
         // Sobrescribir con variables de entorno si existen
         configuracion = {
             server: {
-                port: Number(process.env.PORT) || archivoConfig.server.port,
+                port: Number(process.env.PORT) || serverConfig.port || 3000,
             },
             database: {
-                type: (process.env.DB_TYPE as 'postgres' | 'sqlite') || archivoConfig.database.type || 'postgres',
-                filename: process.env.DB_FILENAME || archivoConfig.database.filename || 'database.sqlite',
-                connectionString: process.env.DATABASE_URL || archivoConfig.database.connectionString,
-                host: process.env.DB_HOST || archivoConfig.database.host,
-                port: Number(process.env.DB_PORT) || archivoConfig.database.port,
-                database: process.env.DB_NAME || archivoConfig.database.database,
-                user: process.env.DB_USER || archivoConfig.database.user,
-                password: process.env.DB_PASSWORD || archivoConfig.database.password,
+                type: (process.env.DB_TYPE as 'postgres' | 'sqlite') || databaseConfig.type || 'postgres',
+                filename: process.env.DB_FILENAME || databaseConfig.filename || 'database.sqlite',
+                connectionString: process.env.DATABASE_URL || databaseConfig.connectionString,
+                host: process.env.DB_HOST || databaseConfig.host,
+                port: Number(process.env.DB_PORT) || databaseConfig.port,
+                database: process.env.DB_NAME || databaseConfig.database,
+                user: process.env.DB_USER || databaseConfig.user,
+                password: process.env.DB_PASSWORD || databaseConfig.password,
             },
             jwt: {
-                accessTokenSecret: process.env.JWT_ACCESS_SECRET || archivoConfig.jwt.accessTokenSecret,
-                refreshTokenSecret: process.env.JWT_REFRESH_SECRET || archivoConfig.jwt.refreshTokenSecret,
-                accessTokenExpiry: process.env.JWT_ACCESS_EXPIRY || archivoConfig.jwt.accessTokenExpiry,
-                refreshTokenExpiry: process.env.JWT_REFRESH_EXPIRY || archivoConfig.jwt.refreshTokenExpiry,
+                accessTokenSecret: process.env.JWT_ACCESS_SECRET || jwtConfig.accessTokenSecret,
+                refreshTokenSecret: process.env.JWT_REFRESH_SECRET || jwtConfig.refreshTokenSecret,
+                accessTokenExpiry: process.env.JWT_ACCESS_EXPIRY || jwtConfig.accessTokenExpiry,
+                refreshTokenExpiry: process.env.JWT_REFRESH_EXPIRY || jwtConfig.refreshTokenExpiry,
             },
             cors: {
-                enabled: process.env.CORS_ENABLED ? process.env.CORS_ENABLED === 'true' : archivoConfig.cors.enabled,
-                origin: process.env.CORS_ORIGIN || archivoConfig.cors.origin,
+                enabled: process.env.CORS_ENABLED ? process.env.CORS_ENABLED === 'true' : (corsConfig.enabled !== undefined ? corsConfig.enabled : true),
+                origin: process.env.CORS_ORIGIN || corsConfig.origin || '*',
             }
         };
 
