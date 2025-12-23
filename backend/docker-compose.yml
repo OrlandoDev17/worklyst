@@ -1,0 +1,14 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - DB_TYPE=sqlite
+      - DB_FILENAME=data/worklyst.sqlite
+      - JWT_ACCESS_SECRET=changeme_access
+      - JWT_REFRESH_SECRET=changeme_refresh
+    restart: always
