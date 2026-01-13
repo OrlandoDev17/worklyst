@@ -18,7 +18,7 @@ export function Register() {
 
   useEffect(() => {
     if (success) {
-      navigate("/");
+      navigate("/projects");
     }
   }, [success, navigate]);
 

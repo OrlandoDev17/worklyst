@@ -8,6 +8,7 @@ import App from "./App";
 import { Login } from "./pages/Login";
 import { Register } from "./pages/Register";
 import { Projects } from "./pages/Projects";
+import { Dashboard } from "./pages/Dashboard";
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
@@ -29,6 +30,14 @@ createRoot(document.getElementById("root")).render(
           element={
             <Layout>
               <Projects />
+            </Layout>
+          }
+        />
+        <Route
+          path="/dashboard"
+          element={
+            <Layout>
+              <Dashboard />
             </Layout>
           }
         />
