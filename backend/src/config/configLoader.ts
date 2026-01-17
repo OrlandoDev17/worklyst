@@ -28,6 +28,11 @@ interface Configuracion {
         enabled: boolean;
         origin: string;
     };
+    rateLimit: {
+        windowMs: number;
+        max: number;
+        authMax: number;
+    };
 }
 
 let configuracion: Configuracion;
@@ -50,6 +55,7 @@ export const cargarConfiguracion = (): Configuracion => {
         const databaseConfig = archivoConfig?.database || {};
         const jwtConfig = archivoConfig?.jwt || {};
         const corsConfig = archivoConfig?.cors || {};
+        const rateLimitConfig = archivoConfig?.rateLimit || {};
 
         // Sobrescribir con variables de entorno si existen
         configuracion = {
@@ -75,6 +81,11 @@ export const cargarConfiguracion = (): Configuracion => {
             cors: {
                 enabled: process.env.CORS_ENABLED ? process.env.CORS_ENABLED === 'true' : (corsConfig.enabled !== undefined ? corsConfig.enabled : true),
                 origin: process.env.CORS_ORIGIN || corsConfig.origin || '*',
+            },
+            rateLimit: {
+                windowMs: rateLimitConfig.windowMs || 900000,
+                max: rateLimitConfig.max || 100,
+                authMax: rateLimitConfig.authMax || 5
             }
         };
 
