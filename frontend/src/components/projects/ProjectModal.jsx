@@ -1,16 +1,56 @@
+import { useState } from "react";
+import { Plus, X } from "../common/Icons";
+
+const INPUT_STYLES =
+  "px-4 py-2 rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all";
+const LABEL_STYLES = "text-sm font-semibold text-gray-600";
+
+const PROJECT_STATUS_OPTIONS = ["En Progreso", "Completado", "Pendiente"];
+
+function FormField({ label, children }) {
+  return (
+    <label className="flex flex-col gap-2">
+      <span className={LABEL_STYLES}>{label}</span>
+      {children}
+    </label>
+  );
+}
+
 export function ProjectModal({ onClose, onAddProject }) {
+  const [collaborators, setCollaborators] = useState([]);
+  const [newCollaborator, setNewCollaborator] = useState("");
+
+  const handleAddCollaborator = (e) => {
+    e.preventDefault();
+    if (newCollaborator.trim()) {
+      setCollaborators([...collaborators, newCollaborator.trim()]);
+      setNewCollaborator("");
+    }
+  };
+
+  const removeCollaborator = (index) => {
+    setCollaborators(collaborators.filter((_, i) => i !== index));
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
     const formData = new FormData(e.target);
     const name = formData.get("name");
+    const description = formData.get("description");
+    const status = formData.get("status");
+    const dateInput = formData.get("date");
 
     if (!name) return;
 
     onAddProject({
       id: Date.now(),
       name,
-      status: "En Progreso", // Default status
-      date: new Date().toLocaleDateString(),
+      description,
+      status,
+      date: dateInput
+        ? new Date(dateInput).toLocaleDateString()
+        : new Date().toLocaleDateString(),
+      colaborators: collaborators,
     });
     onClose();
   };
@@ -18,36 +58,106 @@ export function ProjectModal({ onClose, onAddProject }) {
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 backdrop-blur-sm">
       <div className="absolute inset-0" onClick={onClose} />
-      <article className="relative bg-white p-6 rounded-xl shadow-2xl border border-white/20 w-full max-w-md animate-in fade-in zoom-in duration-200">
+      <article className="relative bg-white p-6 rounded-xl shadow-2xl border border-white/20 w-full max-w-lg max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in duration-200">
         <h2 className="text-2xl font-bold text-gray-800 mb-6">
           Crear proyecto
         </h2>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          <label className="flex flex-col gap-2">
-            <span className="text-sm font-semibold text-gray-600">
-              Nombre del Proyecto
-            </span>
+          <FormField label="Nombre del Proyecto">
             <input
               type="text"
               name="name"
+              required
               autoFocus
-              className="px-4 py-2 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all"
+              className={INPUT_STYLES}
               placeholder="Mi nuevo proyecto..."
             />
-          </label>
-          <div className="flex justify-end gap-3 mt-4">
+          </FormField>
+
+          <FormField label="Descripción">
+            <textarea
+              name="description"
+              rows={3}
+              className={`${INPUT_STYLES} resize-none`}
+              placeholder="Descripción breve del proyecto..."
+            />
+          </FormField>
+
+          <div className="grid grid-cols-2 gap-4">
+            <FormField label="Estado">
+              <select name="status" className={`${INPUT_STYLES} bg-white`}>
+                {PROJECT_STATUS_OPTIONS.map((status) => (
+                  <option key={status} value={status}>
+                    {status}
+                  </option>
+                ))}
+              </select>
+            </FormField>
+
+            <FormField label="Fecha límite">
+              <input type="date" name="date" className={INPUT_STYLES} />
+            </FormField>
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <span className={LABEL_STYLES}>Colaboradores</span>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={newCollaborator}
+                onChange={(e) => setNewCollaborator(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    handleAddCollaborator(e);
+                  }
+                }}
+                className={`flex-1 ${INPUT_STYLES}`}
+                placeholder="Nombre o email..."
+              />
+              <button
+                type="button"
+                onClick={handleAddCollaborator}
+                className="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+              >
+                <Plus className="size-5" />
+              </button>
+            </div>
+
+            {collaborators.length > 0 && (
+              <ul className="flex flex-wrap gap-2 mt-2">
+                {collaborators.map((collab, index) => (
+                  <li
+                    key={index}
+                    className="flex items-center gap-1 bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-sm"
+                  >
+                    <span>{collab}</span>
+                    <button
+                      type="button"
+                      onClick={() => removeCollaborator(index)}
+                      className="hover:text-blue-900"
+                    >
+                      <X className="size-3" />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+          <div className="flex justify-end gap-3 mt-6 pt-4">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg font-medium transition-colors"
+              className="px-4 py-2 border border-gray-300 text-gray-600 hover:bg-gray-200 rounded-lg font-medium transition-colors"
             >
               Cancelar
             </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors shadow-lg shadow-blue-600/20"
             >
-              Crear
+              Crear Proyecto
             </button>
           </div>
         </form>
