@@ -87,3 +87,16 @@ export const buscarUsuarioPorEmail = async (email: string): Promise<Usuario | un
         created_at: resultado.created_at
     };
 };
+
+export const buscarUsuarioPorId = async (id: string): Promise<Usuario | undefined> => {
+    const sql = `SELECT * FROM users WHERE id = ?`;
+    const resultado = await obtener(sql, [id]) as any;
+    if (!resultado) return undefined;
+
+    return {
+        id: resultado.id,
+        usuario: resultado.name,
+        email: resultado.email,
+        created_at: resultado.created_at
+    };
+};

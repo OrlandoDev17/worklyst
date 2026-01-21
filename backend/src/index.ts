@@ -15,16 +15,24 @@ app.get('/prueba', (req: Request, res: Response) => {
     res.send('¡Hola Mundo! Backend con TypeScript y SQLite funcionando');
 });
 
-// Conexión a la base de datos
-import db from './config/db';
+// Rutas
 import rutasAuth from './routes/authRoutes';
+import rutasProyectos from './routes/projectRoutes';
+import rutasRoles from './routes/roleRoutes';
 import { inicializarTablas } from './config/database/init';
+import swaggerUi from 'swagger-ui-express';
+import { swaggerSpec } from './config/swagger';
 
 // Inicializar tablas
 inicializarTablas().catch(console.error);
 
-// Rutas
+// Documentación Swagger
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
+// Rutas API
 app.use('/api/auth', rutasAuth);
+app.use('/api/projects', rutasProyectos);
+app.use('/api/roles', rutasRoles);
 
 app.listen(puerto, () => {
     console.log(`✓ Servidor escuchando en http://localhost:${puerto}`);
