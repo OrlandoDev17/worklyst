@@ -1,10 +1,15 @@
 import { Header } from "./Header";
+import { Footer } from "./Footer";
+import { Outlet } from "react-router-dom";
 
-export function Layout({ children }) {
+export function Layout() {
   return (
     <>
       <Header />
-      {children}
+      <main className="min-h-screen">
+        <Outlet />
+      </main>
+      <Footer />
     </>
   );
 }
