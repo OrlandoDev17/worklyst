@@ -7,7 +7,7 @@ import { TeamActivity } from "../components/dashboard/TeamActivity.jsx";
 export function Dashboard() {
   return (
     <>
-      <div className="min-h-screen bg-[#f8fafc] p-4 md:p-8 font-sans text-gray-800">
+      <div className="min-h-screen bg-[#f8fafc] p-4 md:p-8 text-gray-800">
         <main className="max-w-7xl mx-auto">
           <header className="mb-8 mt-4">
             <h1 className="text-4xl font-extrabold text-gray-900 mb-2">
@@ -94,7 +94,7 @@ export function Dashboard() {
           </section>
 
           <section className="flex m-3">
-            <div className="bg-white p-6 md:p-8 rounded-[2.5rem] border border-gray-100 shadow-sm">
+            <div className="bg-white p-6 md:p-8  rounded-[2.5rem] border border-gray-100 shadow-sm">
               <h3 className="text-xl font-bold mb-6">Acciones Rápidas</h3>
               <div className="flex flex-col gap-3">
                 <QuickAction

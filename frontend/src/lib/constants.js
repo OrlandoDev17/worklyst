@@ -44,12 +44,12 @@ export const NavbarItems = [
     href: "/projects",
   },
   {
-    label: "Dashboard",
-    href: "/dashboard",
+    label: "Comunidad",
+    href: "/community",
   },
   {
-    label: "Chat",
-    href: "/chat",
+    label: "Dashboard",
+    href: "/dashboard",
   },
 ];
 

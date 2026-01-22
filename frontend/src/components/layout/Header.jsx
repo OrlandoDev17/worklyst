@@ -34,7 +34,7 @@ export function Header() {
       </picture>
 
       {/* Desktop Navigation */}
-      <nav className="hidden lg:flex flex-1 items-center justify-center gap-8">
+      <nav className="hidden xl:flex flex-1 items-center justify-center gap-8">
         {NavbarItems.map(({ label, href }) => (
           <Link
             key={href}
@@ -46,7 +46,7 @@ export function Header() {
         ))}
       </nav>
 
-      <aside className="hidden lg:flex items-center gap-4">
+      <aside className="hidden xl:flex items-center gap-4">
         {showAuthButtons ? (
           <>
             <Link
@@ -73,7 +73,7 @@ export function Header() {
       </aside>
 
       <button
-        className="lg:hidden p-2 text-gray-600 hover:text-blue-600 transition"
+        className="xl:hidden p-2 text-gray-600 hover:text-blue-600 transition"
         onClick={() => setIsOpen(!isOpen)}
         aria-label="Toggle menu"
       >

@@ -9,7 +9,7 @@ export function MobileMenu({
   if (!isOpen) return null;
 
   return (
-    <div className="absolute top-full left-0 w-full bg-white border-b border-gray-100 shadow-xl lg:hidden animate-in fade-in slide-in-from-top-4 duration-200 p-4 flex flex-col gap-4">
+    <div className="absolute top-full left-0 w-full bg-white border-b border-gray-100 shadow-xl xl:hidden animate-in fade-in slide-in-from-top-4 duration-200 p-4 flex flex-col gap-4">
       <nav className="flex flex-col space-y-2">
         {NavbarItems.map(({ label, href }) => (
           <Link
