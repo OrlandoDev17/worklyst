@@ -10,12 +10,13 @@ import { Register } from "./pages/Register";
 import { Projects } from "./pages/Projects";
 import { ProjectDetail } from "./pages/[id]";
 import { Dashboard } from "./pages/Dashboard";
+import { Community } from "./pages/Community";
 // Providers
 import { AuthProvider } from "./context/AuthContext";
 import { ProjectsProvider } from "./context/ProjectsContext";
 import { ToastProvider } from "./context/ToastContext";
 // Componentes
-import { ProtectedRoute } from "./components/auth/ProtectedRoute";
+// import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
@@ -29,11 +30,11 @@ createRoot(document.getElementById("root")).render(
                 <Route path="/" element={<App />} />
 
                 {/* Rutas Protegidas */}
-                <Route element={<ProtectedRoute />}>
-                  <Route path="/projects" element={<Projects />} />
-                  <Route path="/projects/:id" element={<ProjectDetail />} />
-                  <Route path="/dashboard" element={<Dashboard />} />
-                </Route>
+
+                <Route path="/projects" element={<Projects />} />
+                <Route path="/projects/:id" element={<ProjectDetail />} />
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/community" element={<Community />} />
               </Route>
 
               {/* Rutas de Autenticacion (Sin Layout) */}

@@ -1,9 +1,7 @@
 // Hooks
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 import { useProjects } from "../context/ProjectsContext";
 import { useAuth } from "../context/AuthContext";
-
 // Componentes
 import { ProjectModal } from "../components/projects/ProjectModal";
 import { ProjectCard } from "../components/projects/ProjectCard";
@@ -14,15 +12,7 @@ export function Projects() {
   // Estados y Hooks
   const [showModal, setShowModal] = useState(false);
   const { projects, addProject, deleteProject } = useProjects();
-  const { user, tokens } = useAuth();
-  const navigate = useNavigate();
-
-  // Efectos
-  useEffect(() => {
-    if (!tokens.tokenAcceso || !user) {
-      return navigate("/login");
-    }
-  }, [tokens, user, navigate]);
+  const { user } = useAuth();
 
   // Manejadores de eventos
   const handleShowModal = () => setShowModal(!showModal);
