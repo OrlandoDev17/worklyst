@@ -8,7 +8,6 @@ import { useAuth } from "../../context/AuthContext";
 // Componentes
 import { MobileMenu } from "./MobileMenu";
 import { NavbarItems } from "../../lib/constants";
-
 export function Header() {
   const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
