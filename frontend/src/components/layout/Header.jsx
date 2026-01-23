@@ -12,9 +12,11 @@ export function Header() {
   const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
 
-  const { user, tokens, logout } = useAuth();
+  const { user, logout } = useAuth();
 
-  const showAuthButtons = !user && !tokens.tokenAcceso;
+  const token = localStorage.getItem("tokenAcceso");
+
+  const showAuthButtons = !user && !token;
 
   const userNameFirstLetter = user?.nombre.charAt(0).toUpperCase();
 

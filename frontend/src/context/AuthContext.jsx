@@ -19,10 +19,6 @@ export function AuthProvider({ children }) {
   const [error, setError] = useState(false);
   const [loading, setLoading] = useState(false);
   const [user, setUser] = useState(null);
-  const [tokens, setTokens] = useState({
-    tokenAcceso: null,
-    tokenActualizacion: null,
-  });
 
   const { addToast } = useToast();
   const API_URL = import.meta.env.VITE_API_URL;
@@ -47,11 +43,9 @@ export function AuthProvider({ children }) {
     setLoading(true);
     try {
       const res = await axios.post(API_URL + "/api/auth/login", userData);
-      setTokens({
-        tokenAcceso: res.data.tokenAcceso,
-        tokenActualizacion: res.data.tokenActualizacion,
-      });
       setUser(res.data.usuario);
+      localStorage.setItem("tokenAcceso", res.data.tokenAcceso);
+      localStorage.setItem("tokenActualizacion", res.data.tokenActualizacion);
       setSuccess(true);
       addToast(`Bienvenido de nuevo, ${res.data.usuario.nombre}`, "success");
     } catch (error) {
@@ -67,12 +61,10 @@ export function AuthProvider({ children }) {
     try {
       setLoading(true);
       await axios.post(API_URL + "/api/auth/logout", {
-        tokenActualizacion: tokens.tokenActualizacion,
+        tokenActualizacion: localStorage.getItem("tokenActualizacion"),
       });
-      setTokens({
-        tokenAcceso: null,
-        tokenActualizacion: null,
-      });
+      localStorage.removeItem("tokenAcceso");
+      localStorage.removeItem("tokenActualizacion");
       setUser(null);
       setSuccess(true);
       addToast("Sesión cerrada correctamente", "info");
@@ -87,7 +79,7 @@ export function AuthProvider({ children }) {
 
   return (
     <AuthContext.Provider
-      value={{ register, login, logout, success, error, loading, user, tokens }}
+      value={{ register, login, logout, success, error, loading, user }}
     >
       {children}
     </AuthContext.Provider>

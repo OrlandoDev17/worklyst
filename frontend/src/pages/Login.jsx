@@ -19,13 +19,15 @@ export function Login() {
   });
 
   const navigate = useNavigate();
-  const { login, success, loading, user, tokens } = useAuth();
+  const { login, success, loading, user } = useAuth();
+
+  const token = localStorage.getItem("tokenAcceso");
 
   useEffect(() => {
-    if (success && user && tokens.tokenAcceso) {
+    if (success && user && token) {
       navigate("/projects");
     }
-  }, [success, user, tokens, navigate]);
+  }, [success, user, token, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

@@ -19,15 +19,17 @@ export function Register() {
     password: "",
   });
 
-  const { register, success, loading, user, tokens } = useAuth();
+  const { register, success, loading, user } = useAuth();
 
   const navigate = useNavigate();
 
+  const token = localStorage.getItem("tokenAcceso");
+
   useEffect(() => {
-    if (success && user && tokens.tokenAcceso) {
-      navigate("/projects");
+    if (success && user && token) {
+      navigate("/login");
     }
-  }, [success, user, tokens, navigate]);
+  }, [success, user, token, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

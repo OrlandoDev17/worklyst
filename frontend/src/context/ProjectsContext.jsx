@@ -1,7 +1,8 @@
 /* eslint-disable react-refresh/only-export-components */
 
-import { createContext, useContext, useState, useEffect } from "react";
+import { createContext, useContext, useState } from "react";
 import { useToast } from "./ToastContext";
+import axios from "axios";
 
 const ProjectsContext = createContext();
 
@@ -14,110 +15,88 @@ export function useProjects() {
 }
 
 export function ProjectsProvider({ children }) {
-  // Load from localStorage or start empty
-  const [projects, setProjects] = useState(() => {
-    const saved = localStorage.getItem("worklyst_projects");
-    return saved ? JSON.parse(saved) : [];
+  // Carga proyectos desde la BD o inicia con un array vacío
+  const [state, setState] = useState({
+    loading: false,
+    error: null,
+    success: false,
   });
+  const [projects, setProjects] = useState([]);
 
   const { addToast } = useToast();
 
-  useEffect(() => {
-    localStorage.setItem("worklyst_projects", JSON.stringify(projects));
-  }, [projects]);
+  const API_URL = import.meta.env.VITE_API_URL;
 
-  const addProject = (project) => {
-    // Add columns/tasks structure to new projects
-    const newProject = {
-      ...project,
-      tasks: {
-        todo: [],
-        inprogress: [],
-        done: [],
-      },
-    };
-    setProjects((prev) => [...prev, newProject]);
-    addToast("Proyecto creado con éxito", "success");
+  // Función auxiliar para obtener headers actualizados
+  const getHeaders = () => ({
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${localStorage.getItem("tokenAcceso")}`,
+  });
+
+  const addProject = async (projectData) => {
+    // Añadir un Proyecto
+    setState({ loading: true, error: null, success: false });
+    try {
+      // La API espera: { nombre, descripcion, miembros: [] }
+      // Aseguramos que los miembros sean un array (por ahora vacío si no hay UUIDs válidos)
+      const payload = {
+        nombre: projectData.nombre,
+        descripcion: projectData.descripcion,
+        miembros: [], // TODO: Implementar búsqueda de usuarios para enviar UUIDs reales
+      };
+
+      const res = await axios.post(`${API_URL}/api/projects`, payload, {
+        headers: getHeaders(),
+      });
+
+      setState({ loading: false, error: null, success: true });
+      // La API retorna { mensaje, proyecto: {...} }
+      setProjects((prev) => [...prev, res.data.proyecto]);
+      addToast("Proyecto añadido correctamente", "success");
+    } catch (error) {
+      console.error("Error al crear proyecto:", error);
+      const msg =
+        error.response?.data?.mensaje ||
+        error.message ||
+        "Error al crear proyecto";
+      setState({ loading: false, error: msg, success: false });
+      addToast(msg, "error");
+    } finally {
+      setState((prev) => ({ ...prev, loading: false }));
+    }
   };
 
-  const getProject = (id) => {
-    return projects.find((p) => p.id.toString() === id.toString());
-  };
-
-  const deleteProject = (id) => {
-    setProjects((prev) =>
-      prev.filter((p) => p.id.toString() !== id.toString()),
-    );
-    addToast("Proyecto eliminado correctamente", "success");
-  };
-
-  const addTask = (projectId, columnId, task) => {
-    setProjects((prev) =>
-      prev.map((project) => {
-        if (project.id.toString() === projectId.toString()) {
-          return {
-            ...project,
-            tasks: {
-              ...project.tasks,
-              [columnId]: [
-                ...project.tasks[columnId],
-                { ...task, id: Date.now().toString() },
-              ],
-            },
-          };
-        }
-        return project;
-      }),
-    );
-    addToast("Tarea añadida correctamente", "success");
-  };
-
-  const moveTask = (projectId, sourceCol, destCol, sourceIndex, destIndex) => {
-    setProjects((prev) =>
-      prev.map((project) => {
-        if (project.id.toString() === projectId.toString()) {
-          const sourceList = [...project.tasks[sourceCol]];
-          const destList =
-            sourceCol === destCol ? sourceList : [...project.tasks[destCol]];
-
-          const [movedTask] = sourceList.splice(sourceIndex, 1);
-
-          if (sourceCol === destCol) {
-            sourceList.splice(destIndex, 0, movedTask);
-            return {
-              ...project,
-              tasks: {
-                ...project.tasks,
-                [sourceCol]: sourceList,
-              },
-            };
-          } else {
-            destList.splice(destIndex, 0, movedTask);
-            return {
-              ...project,
-              tasks: {
-                ...project.tasks,
-                [sourceCol]: sourceList,
-                [destCol]: destList,
-              },
-            };
-          }
-        }
-        return project;
-      }),
-    );
-    addToast("Tarea movida", "info");
+  const getProjects = async () => {
+    setState({ loading: true, error: null, success: false });
+    try {
+      const res = await axios.get(`${API_URL}/api/projects`, {
+        headers: getHeaders(),
+      });
+      setState({ loading: false, error: null, success: true });
+      // La API retorna un array de proyectos directamente
+      setProjects(res.data);
+      // No mostramos toast cada vez que se cargan, es invasivo
+      // addToast("Proyectos cargados correctamente", "success");
+    } catch (error) {
+      console.error("Error al obtener proyectos:", error);
+      const msg =
+        error.response?.data?.mensaje ||
+        error.message ||
+        "Error al cargar proyectos";
+      setState({ loading: false, error: msg, success: false });
+      addToast(msg, "error");
+    } finally {
+      setState((prev) => ({ ...prev, loading: false }));
+    }
   };
 
   return (
     <ProjectsContext.Provider
       value={{
         projects,
+        state,
         addProject,
-        getProject,
-        addTask,
-        moveTask,
-        deleteProject,
+        getProjects,
       }}
     >
       {children}

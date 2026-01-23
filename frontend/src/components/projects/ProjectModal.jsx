@@ -5,8 +5,6 @@ const INPUT_STYLES =
   "px-4 py-2 rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all";
 const LABEL_STYLES = "text-sm font-semibold text-gray-600";
 
-const PROJECT_STATUS_OPTIONS = ["En Progreso", "Completado", "Pendiente"];
-
 function FormField({ label, children }) {
   return (
     <label className="flex flex-col gap-2">
@@ -17,42 +15,37 @@ function FormField({ label, children }) {
 }
 
 export function ProjectModal({ onClose, onAddProject }) {
-  const [collaborators, setCollaborators] = useState([]);
-  const [newCollaborator, setNewCollaborator] = useState("");
+  const [miembros, setMiembros] = useState([]);
+  const [newMiembro, setNewMiembro] = useState("");
 
   const handleAddCollaborator = (e) => {
     e.preventDefault();
-    if (newCollaborator.trim()) {
-      setCollaborators([...collaborators, newCollaborator.trim()]);
-      setNewCollaborator("");
+    if (newMiembro.trim()) {
+      setMiembros([...miembros, newMiembro.trim()]);
+      setNewMiembro("");
     }
   };
 
   const removeCollaborator = (index) => {
-    setCollaborators(collaborators.filter((_, i) => i !== index));
+    setMiembros(miembros.filter((_, i) => i !== index));
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
     const formData = new FormData(e.target);
-    const name = formData.get("name");
-    const description = formData.get("description");
-    const status = formData.get("status");
-    const dateInput = formData.get("date");
+    const nombre = formData.get("nombre");
+    const descripcion = formData.get("descripcion");
 
-    if (!name) return;
+    if (!nombre) return;
 
+    // No generamos ID aquí, el backend lo hará.
+    // Solo pasamos nombre, descripcion y miembros (que serán procesados por el contexto/backend)
     onAddProject({
-      id: Date.now(),
-      name,
-      description,
-      status,
-      date: dateInput
-        ? new Date(dateInput).toLocaleDateString()
-        : new Date().toLocaleDateString(),
-      colaborators: collaborators,
+      nombre,
+      descripcion,
+      miembros, // Se envían los nombres/emails ingresados, aunque por ahora la API requiere UUIDs
     });
-    onClose();
+    // El modal se cierra en Projects.jsx tras la operación exitosa
   };
 
   return (
@@ -66,7 +59,7 @@ export function ProjectModal({ onClose, onAddProject }) {
           <FormField label="Nombre del Proyecto">
             <input
               type="text"
-              name="name"
+              name="nombre"
               required
               autoFocus
               className={INPUT_STYLES}
@@ -76,36 +69,20 @@ export function ProjectModal({ onClose, onAddProject }) {
 
           <FormField label="Descripción">
             <textarea
-              name="description"
+              name="descripcion"
               rows={3}
               className={`${INPUT_STYLES} resize-none`}
               placeholder="Descripción breve del proyecto..."
             />
           </FormField>
 
-          <div className="grid grid-cols-2 gap-4">
-            <FormField label="Estado">
-              <select name="status" className={`${INPUT_STYLES} bg-white`}>
-                {PROJECT_STATUS_OPTIONS.map((status) => (
-                  <option key={status} value={status}>
-                    {status}
-                  </option>
-                ))}
-              </select>
-            </FormField>
-
-            <FormField label="Fecha límite">
-              <input type="date" name="date" className={INPUT_STYLES} />
-            </FormField>
-          </div>
-
           <div className="flex flex-col gap-2">
             <span className={LABEL_STYLES}>Colaboradores</span>
             <div className="flex gap-2">
               <input
                 type="text"
-                value={newCollaborator}
-                onChange={(e) => setNewCollaborator(e.target.value)}
+                value={newMiembro}
+                onChange={(e) => setNewMiembro(e.target.value)}
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
                     e.preventDefault();
@@ -124,14 +101,14 @@ export function ProjectModal({ onClose, onAddProject }) {
               </button>
             </div>
 
-            {collaborators.length > 0 && (
+            {miembros.length > 0 && (
               <ul className="flex flex-wrap gap-2 mt-2">
-                {collaborators.map((collab, index) => (
+                {miembros.map((miembro, index) => (
                   <li
                     key={index}
                     className="flex items-center gap-1 bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-sm"
                   >
-                    <span>{collab}</span>
+                    <span>{miembro}</span>
                     <button
                       type="button"
                       onClick={() => removeCollaborator(index)}
@@ -145,7 +122,7 @@ export function ProjectModal({ onClose, onAddProject }) {
             )}
           </div>
 
-          <div className="flex justify-end gap-3 mt-6 pt-4">
+          <div className="flex justify-end gap-3 pt-4">
             <button
               type="button"
               onClick={onClose}
