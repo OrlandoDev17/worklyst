@@ -83,9 +83,9 @@ export const cargarConfiguracion = (): Configuracion => {
                 origin: process.env.CORS_ORIGIN || corsConfig.origin || '*',
             },
             rateLimit: {
-                windowMs: rateLimitConfig.windowMs || 900000,
-                max: rateLimitConfig.max || 100,
-                authMax: rateLimitConfig.authMax || 5
+                windowMs: Number(process.env.RATE_LIMIT_WINDOW_MS) || rateLimitConfig.windowMs || 900000,
+                max: Number(process.env.RATE_LIMIT_MAX) || rateLimitConfig.max || 100,
+                authMax: Number(process.env.RATE_LIMIT_AUTH_MAX) || rateLimitConfig.authMax || 5
             }
         };
 
