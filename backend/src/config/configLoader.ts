@@ -33,6 +33,9 @@ interface Configuracion {
         max: number;
         authMax: number;
     };
+    system: {
+        token: string;
+    };
 }
 
 let configuracion: Configuracion;
@@ -56,6 +59,7 @@ export const cargarConfiguracion = (): Configuracion => {
         const jwtConfig = archivoConfig?.jwt || {};
         const corsConfig = archivoConfig?.cors || {};
         const rateLimitConfig = archivoConfig?.rateLimit || {};
+        const systemConfig = archivoConfig?.system || {};
 
         // Sobrescribir con variables de entorno si existen
         configuracion = {
@@ -86,6 +90,9 @@ export const cargarConfiguracion = (): Configuracion => {
                 windowMs: Number(process.env.RATE_LIMIT_WINDOW_MS) || rateLimitConfig.windowMs || 900000,
                 max: Number(process.env.RATE_LIMIT_MAX) || rateLimitConfig.max || 100,
                 authMax: Number(process.env.RATE_LIMIT_AUTH_MAX) || rateLimitConfig.authMax || 5
+            },
+            system: {
+                token: process.env.SYSTEM_API_TOKEN || systemConfig.token
             }
         };
 

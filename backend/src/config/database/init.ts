@@ -67,6 +67,38 @@ export const inicializarTablas = async () => {
             )
         `);
 
+        // Tabla de tareas
+        await consulta(`
+            CREATE TABLE IF NOT EXISTS tasks (
+                id VARCHAR(36) PRIMARY KEY,
+                project_id VARCHAR(36) NOT NULL,
+                assigned_to VARCHAR(36),
+                title VARCHAR(255) NOT NULL,
+                description TEXT,
+                status VARCHAR(20) DEFAULT 'pending' CHECK(status IN ('pending', 'in_progress', 'completed')),
+                due_date TIMESTAMP,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
+                FOREIGN KEY (assigned_to) REFERENCES users(id) ON DELETE SET NULL
+            )
+        `);
+
+        // Crear usuario del sistema (IA Bot) si no existe
+        const mensajeBot = await consulta(`SELECT * FROM users WHERE email = 'ia_bot@system.local'`);
+        if ((mensajeBot as any[]).length === 0) {
+            const { v4: uuidv4 } = require('uuid');
+            const bcrypt = require('bcryptjs');
+            const botId = uuidv4();
+            const hashedPassword = await bcrypt.hash('system_password_secure_' + uuidv4(), 10);
+
+            await consulta(`
+                INSERT INTO users(id, name, email, password)
+        VALUES(?, 'IA System Bot', 'ia_bot@system.local', ?)
+            `, [botId, hashedPassword]);
+            console.log('Usuario de sistema (IA Bot) creado');
+        }
+
         console.log('Tablas verificadas/creadas correctamente');
     } catch (error) {
         console.error('Error al inicializar las tablas:', error);

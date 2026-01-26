@@ -137,6 +137,14 @@ jwt:
 cors:
   enabled: true                  # Habilitar/deshabilitar CORS
   origin: "*"                    # Origins permitidos
+
+rateLimit:
+  windowMs: 900000               # Ventana de tiempo en ms (15 min)
+  max: 100                       # Máximo de peticiones por IP
+  authMax: 5                     # Máximo de intentos de login fallidos
+
+system:
+  token: [SYSTEM_TOKEN]          # Token permanente para integraciones (IA/n8n)
 ```
 
 **Ventajas del Enfoque YAML:**
@@ -430,6 +438,132 @@ http://localhost:30200
 ```
 
 ---
+
+#### 8️⃣ Usuarios
+
+**Base Endpoint:** `/api/users`
+
+##### Listar o Buscar Usuarios
+
+**Endpoint:** `GET /api/users`
+**Query Params:**
+
+- `nombre` (opcional): Nombre del usuario (Busca coincidencias parciales)
+- `email` (opcional): Email del usuario (Busca coincidencia exacta)
+
+**Response 200 (Éxito):**
+
+```json
+[
+  {
+    "id": "uuid-usuario",
+    "usuario": "Juan Perez",
+    "email": "juan@example.com",
+    "created_at": "2025-01-01T00:00:00.000Z"
+  }
+]
+```
+
+##### Obtener Usuario por ID
+
+**Endpoint:** `GET /api/users/:id`
+
+**Response 200 (Éxito):**
+
+```json
+{
+  "id": "uuid-usuario",
+  "usuario": "Juan Perez",
+  "email": "juan@example.com",
+  "created_at": "2025-01-01T00:00:00.000Z"
+}
+```
+
+##### Actualizar Información de Usuario
+
+**Endpoint:** `PUT /api/users/:id`
+**Permiso:** Solo el propio usuario (Dueño de la cuenta)
+
+**Request Body:**
+
+```json
+{
+  "usuario": "Nuevo Nombre",
+  "email": "nuevo@email.com"
+}
+```
+
+**Response 200 (Éxito):**
+
+```json
+{
+  "mensaje": "Usuario actualizado exitosamente",
+  "usuario": {
+    "id": "uuid-usuario",
+    "usuario": "Nuevo Nombre",
+    "email": "nuevo@email.com",
+    "created_at": "..."
+  }
+}
+```
+
+#### 9️⃣ Tareas
+
+**Base URL:** `/api`
+
+##### Crear Tarea en Proyecto
+
+**Endpoint:** `POST /projects/:projectId/tasks`
+
+**Request Body:**
+
+```json
+{
+  "titulo": "Implementar Login",
+  "descripcion": "Usar JWT",
+  "asignado_a": "uuid-usuario-responsable",
+  "fecha_limite": "2025-12-31T23:59:59Z"
+}
+```
+
+##### Listar Tareas de Proyecto
+
+**Endpoint:** `GET /projects/:projectId/tasks`
+
+**Response 200 (Éxito):**
+
+```json
+[
+  {
+    "id": "uuid-tarea",
+    "titulo": "Implementar Login",
+    "estado": "pending",
+    "asignado_a_nombre": "Juan Perez",
+    "creado_en": "..."
+  }
+]
+```
+
+##### Ver Detalle de Tarea
+
+**Endpoint:** `GET /tasks/:id`
+
+##### Actualizar Tarea
+
+**Endpoint:** `PUT /tasks/:id`
+
+**Request Body:**
+
+```json
+{
+  "estado": "in_progress",
+  "asignado_a": "nuevo-uuid-usuario"
+}
+```
+
+##### Eliminar Tarea
+
+**Endpoint:** `DELETE /tasks/:id`
 
 #### 7️⃣ Proyectos
 
