@@ -25,6 +25,12 @@ export const crear = async (req: AuthRequest, res: Response): Promise<void> => {
             return;
         }
 
+        // Validar que el usuario asignado sea miembro del proyecto
+        if (asignado_a && !(await verificarMembresia(projectId, asignado_a))) {
+            res.status(400).json({ mensaje: 'El usuario asignado no es miembro del proyecto' });
+            return;
+        }
+
         const nuevaTarea = await crearTarea({
             project_id: projectId,
             title: titulo,
@@ -130,6 +136,12 @@ export const actualizar = async (req: AuthRequest, res: Response): Promise<void>
             return;
         }
 
+        // Validar que el usuario asignado sea miembro del proyecto
+        if (asignado_a && !(await verificarMembresia(tarea.project_id, asignado_a))) {
+            res.status(400).json({ mensaje: 'El usuario asignado no es miembro del proyecto' });
+            return;
+        }
+
         const datosActualizados: any = {};
         if (titulo) datosActualizados.title = titulo;
         if (descripcion !== undefined) datosActualizados.description = descripcion;
@@ -182,5 +194,58 @@ export const eliminar = async (req: AuthRequest, res: Response): Promise<void> =
         res.json({ mensaje: 'Tarea eliminada exitosamente' });
     } catch (error) {
         res.status(500).json({ mensaje: 'Error al eliminar tarea' });
+    }
+};
+
+export const asignar = async (req: AuthRequest, res: Response): Promise<void> => {
+    const id = req.params.id as string;
+    const { asignado_a } = req.body;
+    const userId = req.user?.id;
+
+    if (!asignado_a) {
+        res.status(400).json({ mensaje: 'El ID del usuario a asignar es obligatorio' });
+        return;
+    }
+
+    try {
+        const tarea = await obtenerTareaPorId(id);
+        if (!tarea) {
+            res.status(404).json({ mensaje: 'Tarea no encontrada' });
+            return;
+        }
+
+        if (!userId || !(await verificarMembresia(tarea.project_id, userId))) {
+            res.status(403).json({ mensaje: 'No tienes permiso para asignar esta tarea' });
+            return;
+        }
+
+        // Validar que el usuario asignado sea miembro del proyecto
+        if (!(await verificarMembresia(tarea.project_id, asignado_a))) {
+            res.status(400).json({ mensaje: 'El usuario asignado no es miembro del proyecto' });
+            return;
+        }
+
+        const tareaActualizada = await actualizarTarea(id, { assigned_to: asignado_a });
+
+        if (!tareaActualizada) {
+            res.status(404).json({ mensaje: 'Error al recuperar tarea actualizada' });
+            return;
+        }
+
+        res.json({
+            mensaje: 'Tarea asignada exitosamente',
+            tarea: {
+                id: tareaActualizada.id,
+                proyecto_id: tareaActualizada.project_id,
+                titulo: tareaActualizada.title,
+                descripcion: tareaActualizada.description,
+                estado: tareaActualizada.status,
+                asignado_a: tareaActualizada.assigned_to,
+                fecha_limite: tareaActualizada.due_date,
+                creado_en: tareaActualizada.created_at
+            }
+        });
+    } catch (error) {
+        res.status(500).json({ mensaje: 'Error al asignar tarea' });
     }
 };

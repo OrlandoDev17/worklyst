@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { obtenerDetalle, actualizar, eliminar } from '../controllers/taskController';
+import { obtenerDetalle, actualizar, eliminar, asignar } from '../controllers/taskController';
 import { verificarToken } from '../middleware/authMiddleware';
 
 const router = Router();
@@ -121,5 +121,40 @@ router.put('/:id', actualizar);
  *         description: Tarea eliminada
  */
 router.delete('/:id', eliminar);
+
+
+/**
+ * @swagger
+ * /api/tasks/{id}/assign:
+ *   patch:
+ *     summary: Asignar tarea a un usuario
+ *     tags: [Tareas]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - asignado_a
+ *             properties:
+ *               asignado_a:
+ *                 type: string
+ *                 description: ID del usuario a asignar
+ *     responses:
+ *       200:
+ *         description: Tarea asignada correctamente
+ *       400:
+ *         description: Usuario no es miembro del proyecto
+ */
+router.patch('/:id/assign', asignar);
 
 export default router;
