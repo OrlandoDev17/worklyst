@@ -23,13 +23,11 @@ export function Register() {
 
   const navigate = useNavigate();
 
-  const token = localStorage.getItem("tokenAcceso");
-
   useEffect(() => {
-    if (success && user && token) {
+    if (success && user) {
       navigate("/login");
     }
-  }, [success, user, token, navigate]);
+  }, [success, user, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

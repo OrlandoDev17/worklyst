@@ -1,5 +1,7 @@
-import { useState } from "react";
+/* eslint-disable no-unused-vars */
+import { useEffect, useState } from "react";
 import { Plus, X } from "../common/Icons";
+import api from "../../lib/api";
 
 const INPUT_STYLES =
   "px-4 py-2 rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all";
@@ -15,37 +17,55 @@ function FormField({ label, children }) {
 }
 
 export function ProjectModal({ onClose, onAddProject }) {
-  const [miembros, setMiembros] = useState([]);
-  const [newMiembro, setNewMiembro] = useState("");
+  const [members, setMembers] = useState([]);
+  const [search, setSearch] = useState("");
+  const [suggestions, setSuggestions] = useState([]);
+  const [isSearching, setIsSearching] = useState(false);
 
-  const handleAddCollaborator = (e) => {
-    e.preventDefault();
-    if (newMiembro.trim()) {
-      setMiembros([...miembros, newMiembro.trim()]);
-      setNewMiembro("");
+  // Logica de busqueda con Debounce
+  useEffect(() => {
+    const searchUsers = async () => {
+      if (search.length < 3) {
+        setSuggestions([]);
+        return;
+      }
+
+      setIsSearching(true);
+      try {
+        const res = await api.get(`/api/users?nombre=${search}`);
+        setSuggestions(res.data);
+      } catch (error) {
+        console.error("Error Buscando usuarios", error);
+      } finally {
+        setIsSearching(false);
+      }
+    };
+
+    const timeoutId = setTimeout(searchUsers, 400);
+    return () => clearTimeout(timeoutId);
+  }, [search]);
+
+  const addMember = (user) => {
+    if (!members.find((m) => m.id === user.id)) {
+      setMembers([...members, user]);
     }
+    setSearch("");
+    setSuggestions([]);
   };
 
-  const removeCollaborator = (index) => {
-    setMiembros(miembros.filter((_, i) => i !== index));
+  const removeMember = (id) => {
+    setMembers(members.filter((m) => m.id !== id));
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
     const formData = new FormData(e.target);
-    const nombre = formData.get("nombre");
-    const descripcion = formData.get("descripcion");
 
-    if (!nombre) return;
-
-    // No generamos ID aquí, el backend lo hará.
-    // Solo pasamos nombre, descripcion y miembros (que serán procesados por el contexto/backend)
     onAddProject({
-      nombre,
-      descripcion,
-      miembros, // Se envían los nombres/emails ingresados, aunque por ahora la API requiere UUIDs
+      nombre: formData.get("nombre"),
+      descripcion: formData.get("descripcion"),
+      miembros: members.map((m) => m.id),
     });
-    // El modal se cierra en Projects.jsx tras la operación exitosa
   };
 
   return (
@@ -55,13 +75,13 @@ export function ProjectModal({ onClose, onAddProject }) {
         <h2 className="text-2xl font-bold text-gray-800 mb-6">
           Crear proyecto
         </h2>
+
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <FormField label="Nombre del Proyecto">
             <input
               type="text"
               name="nombre"
               required
-              autoFocus
               className={INPUT_STYLES}
               placeholder="Mi nuevo proyecto..."
             />
@@ -70,69 +90,75 @@ export function ProjectModal({ onClose, onAddProject }) {
           <FormField label="Descripción">
             <textarea
               name="descripcion"
-              rows={3}
+              rows={2}
               className={`${INPUT_STYLES} resize-none`}
-              placeholder="Descripción breve del proyecto..."
+              placeholder="¿De qué trata?"
             />
           </FormField>
 
-          <div className="flex flex-col gap-2">
-            <span className={LABEL_STYLES}>Colaboradores</span>
+          <div className="flex flex-col gap-2 relative">
+            <span className={LABEL_STYLES}>Miembros</span>
             <div className="flex gap-2">
               <input
                 type="text"
-                value={newMiembro}
-                onChange={(e) => setNewMiembro(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    handleAddCollaborator(e);
-                  }
-                }}
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
                 className={`flex-1 ${INPUT_STYLES}`}
-                placeholder="Nombre o email..."
+                placeholder="Buscar por nombre..."
               />
-              <button
-                type="button"
-                onClick={handleAddCollaborator}
-                className="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
-              >
-                <Plus className="size-5" />
-              </button>
             </div>
 
-            {miembros.length > 0 && (
-              <ul className="flex flex-wrap gap-2 mt-2">
-                {miembros.map((miembro, index) => (
-                  <li
-                    key={index}
-                    className="flex items-center gap-1 bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-sm"
-                  >
-                    <span>{miembro}</span>
+            {/* Dropdown de sugerencias */}
+            {suggestions.length > 0 && (
+              <ul className="absolute z-10 top-[70px] w-full bg-white border border-gray-200 rounded-lg shadow-xl overflow-hidden">
+                {suggestions.map((u) => (
+                  <li key={u.id}>
                     <button
                       type="button"
-                      onClick={() => removeCollaborator(index)}
-                      className="hover:text-blue-900"
+                      onClick={() => addMember(u)}
+                      className="w-full text-left px-4 py-2 hover:bg-blue-50 flex flex-col transition-colors"
                     >
-                      <X className="size-3" />
+                      <span className="font-medium text-gray-800">
+                        {u.usuario}
+                      </span>
+                      <span className="text-xs text-gray-500">{u.email}</span>
                     </button>
                   </li>
                 ))}
               </ul>
             )}
+
+            {/* Lista de miembros seleccionados */}
+            <ul className="flex flex-wrap gap-2 mt-2">
+              {members.map((m) => (
+                <li
+                  key={m.id}
+                  className="flex items-center gap-1 bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-sm border border-blue-100"
+                >
+                  <span>{m.usuario}</span>
+                  <button
+                    type="button"
+                    onClick={() => removeMember(m.id)}
+                    className="hover:text-red-500 transition-colors"
+                  >
+                    <X className="size-3" />
+                  </button>
+                </li>
+              ))}
+            </ul>
           </div>
 
           <div className="flex justify-end gap-3 pt-4">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 border border-gray-300 text-gray-600 hover:bg-gray-200 rounded-lg font-medium transition-colors"
+              className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg font-medium transition-colors"
             >
               Cancelar
             </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors shadow-lg shadow-blue-600/20"
+              className="px-6 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-all shadow-lg shadow-blue-600/20"
             >
               Crear Proyecto
             </button>
