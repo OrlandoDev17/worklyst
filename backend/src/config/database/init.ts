@@ -84,6 +84,21 @@ export const inicializarTablas = async () => {
             )
         `);
 
+        // Crear usuario del sistema (IA Bot) si no existe
+        const mensajeBot = await consulta(`SELECT * FROM users WHERE email = 'ia_bot@system.local'`);
+        if ((mensajeBot as any[]).length === 0) {
+            const { v4: uuidv4 } = require('uuid');
+            const bcrypt = require('bcryptjs');
+            const botId = uuidv4();
+            const hashedPassword = await bcrypt.hash('system_password_secure_' + uuidv4(), 10);
+
+            await consulta(`
+                INSERT INTO users(id, name, email, password)
+        VALUES(?, 'IA System Bot', 'ia_bot@system.local', ?)
+            `, [botId, hashedPassword]);
+            console.log('Usuario de sistema (IA Bot) creado');
+        }
+
         console.log('Tablas verificadas/creadas correctamente');
     } catch (error) {
         console.error('Error al inicializar las tablas:', error);

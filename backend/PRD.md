@@ -137,6 +137,14 @@ jwt:
 cors:
   enabled: true                  # Habilitar/deshabilitar CORS
   origin: "*"                    # Origins permitidos
+
+rateLimit:
+  windowMs: 900000               # Ventana de tiempo en ms (15 min)
+  max: 100                       # Máximo de peticiones por IP
+  authMax: 5                     # Máximo de intentos de login fallidos
+
+system:
+  token: [SYSTEM_TOKEN]          # Token permanente para integraciones (IA/n8n)
 ```
 
 **Ventajas del Enfoque YAML:**

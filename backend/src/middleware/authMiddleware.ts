@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import obtenerConfig from '../config/configLoader';
+import { buscarUsuarioPorEmail } from '../models/userModel';
 
 const config = obtenerConfig();
 
@@ -11,13 +12,27 @@ export interface AuthRequest extends Request {
     };
 }
 
-export const verificarToken = (req: AuthRequest, res: Response, next: NextFunction): void => {
+export const verificarToken = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
 
     if (!token) {
         res.status(401).json({ mensaje: 'Token de acceso no proporcionado' });
         return;
+    }
+
+    // Verificar Token de Sistema
+    if (token === config.system.token) {
+        try {
+            const botUser = await buscarUsuarioPorEmail('ia_bot@system.local');
+            if (botUser) {
+                req.user = { id: botUser.id, email: botUser.email };
+                next();
+                return;
+            }
+        } catch (error) {
+            console.error('Error autenticando token de sistema:', error);
+        }
     }
 
     try {
