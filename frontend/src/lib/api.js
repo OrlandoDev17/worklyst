@@ -4,6 +4,14 @@ const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
 });
 
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem("tokenAcceso");
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
 // Interceptor para añadir el token de Acceso a cada peticion
 api.interceptors.response.use(
   (response) => response,

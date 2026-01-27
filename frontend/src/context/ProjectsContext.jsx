@@ -28,12 +28,9 @@ export function ProjectsProvider({ children }) {
   const addProject = async (projectData) => {
     setState({ loading: true, error: null, success: false });
     try {
-      // 3. Usamos 'api' y eliminamos el objeto de configuración de headers
-      // El payload ahora incluye los miembros que elijas en el modal
       const res = await api.post("/api/projects", projectData);
-
       setState({ loading: false, error: null, success: true });
-      setProjects((prev) => [...prev, res.data.proyecto]);
+      setProjects((prev) => [...prev, res.data]);
       addToast("Proyecto añadido correctamente", "success");
     } catch (error) {
       const msg = error.response?.data?.mensaje || "Error al crear proyecto";
@@ -47,7 +44,6 @@ export function ProjectsProvider({ children }) {
   const getProjects = async () => {
     setState({ loading: true, error: null, success: false });
     try {
-      // 4. Mucho más limpio: sin headers manuales
       const res = await api.get("/api/projects");
       setProjects(res.data);
     } catch (error) {

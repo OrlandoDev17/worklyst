@@ -7,6 +7,7 @@ import { ProjectModal } from "../components/projects/ProjectModal";
 import { ProjectCard } from "../components/projects/ProjectCard";
 import { ProjectStats } from "../components/projects/ProjectStats";
 import { CreateProjectCard } from "../components/projects/CreateProjectCard";
+import { ChatAI } from "../components/ai/ChatAI";
 
 export function Projects() {
   // Estados y Hooks
@@ -23,11 +24,13 @@ export function Projects() {
   };
 
   useEffect(() => {
+    console.log(user);
     getProjects();
   }, []);
 
   return (
     <main className="flex flex-col gap-8 max-w-7xl mx-auto pt-12 px-6 pb-20">
+      <ChatAI />
       {/* Encabezado Principal */}
       <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div className="flex flex-col gap-2">
