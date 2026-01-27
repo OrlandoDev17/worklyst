@@ -1,5 +1,5 @@
 // Hooks
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useProjects } from "../context/ProjectsContext";
 import { useAuth } from "../context/AuthContext";
 // Componentes
@@ -7,23 +7,30 @@ import { ProjectModal } from "../components/projects/ProjectModal";
 import { ProjectCard } from "../components/projects/ProjectCard";
 import { ProjectStats } from "../components/projects/ProjectStats";
 import { CreateProjectCard } from "../components/projects/CreateProjectCard";
+import { ChatAI } from "../components/ai/ChatAI";
 
 export function Projects() {
   // Estados y Hooks
   const [showModal, setShowModal] = useState(false);
-  const { projects, addProject, deleteProject } = useProjects();
+  const { projects, addProject, getProjects } = useProjects();
   const { user } = useAuth();
 
   // Manejadores de eventos
   const handleShowModal = () => setShowModal(!showModal);
 
-  const handleAddProject = (project) => {
-    addProject(project);
+  const handleAddProject = async (project) => {
+    await addProject(project);
     setShowModal(false);
   };
 
+  useEffect(() => {
+    console.log(user);
+    getProjects();
+  }, []);
+
   return (
     <main className="flex flex-col gap-8 max-w-7xl mx-auto pt-12 px-6 pb-20">
+      <ChatAI />
       {/* Encabezado Principal */}
       <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div className="flex flex-col gap-2">
@@ -54,13 +61,7 @@ export function Projects() {
         <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {projects.map((project) => (
             <li key={project.id}>
-              <ProjectCard
-                {...project}
-                onClick={(e) => {
-                  e.preventDefault();
-                  deleteProject(project.id);
-                }}
-              />
+              <ProjectCard {...project} />
             </li>
           ))}
 

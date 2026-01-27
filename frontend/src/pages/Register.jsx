@@ -19,15 +19,15 @@ export function Register() {
     password: "",
   });
 
-  const { register, success, loading, user, tokens } = useAuth();
+  const { register, success, loading, user } = useAuth();
 
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (success && user && tokens.tokenAcceso) {
-      navigate("/projects");
+    if (success && user) {
+      navigate("/login");
     }
-  }, [success, user, tokens, navigate]);
+  }, [success, user, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
