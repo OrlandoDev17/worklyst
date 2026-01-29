@@ -1,3 +1,11 @@
+import {
+  Bot,
+  ChartNoAxesColumn,
+  FileChartColumn,
+  Handshake,
+  Timer,
+} from "lucide-react";
+
 export const LoginForm = [
   {
     label: "Correo Electronico",
@@ -57,7 +65,7 @@ export const ProjectsStatus = [
   {
     label: "Proyectos Totales",
     value: 0,
-    status: "total",
+    estado: "total",
     bgColor: "bg-blue-500/10",
     borderColor: "border-blue-500",
     textColor: "text-blue-500",
@@ -66,7 +74,7 @@ export const ProjectsStatus = [
   {
     label: "Completados",
     value: 0,
-    status: "completed",
+    estado: "completed",
     bgColor: "bg-green-500/10",
     borderColor: "border-green-500",
     textColor: "text-green-500",
@@ -75,7 +83,7 @@ export const ProjectsStatus = [
   {
     label: "En Progreso",
     value: 0,
-    status: "inprogress",
+    estado: "active",
     bgColor: "bg-yellow-500/10",
     borderColor: "border-yellow-500",
     textColor: "text-yellow-500",
@@ -84,10 +92,58 @@ export const ProjectsStatus = [
   {
     label: "Atrasados",
     value: 0,
-    status: "overdue",
+    estado: "overdue",
     bgColor: "bg-red-500/10",
     borderColor: "border-red-500",
     textColor: "text-red-500",
     ringColor: "ring-red-500/20",
+  },
+];
+
+export const Features = [
+  {
+    id: "bot",
+    icon: Bot,
+    title: "Agente IA Especializado",
+    description:
+      "Obtén sugerencias inteligentes para organizar tareas y asignar trabajo según las habilidades del equipo.",
+    iconColor: "text-blue-600",
+    iconBgColor: "bg-blue-100",
+  },
+  {
+    id: "handshake",
+    icon: Handshake,
+    title: "Colaboración en tiempo real",
+    description:
+      "Trabaja con tu equipo en tiempo real con chat integrado y actualizaciones instantáneas.",
+    iconColor: "text-green-600",
+    iconBgColor: "bg-green-100",
+  },
+  {
+    id: "file-chart-column",
+    icon: FileChartColumn,
+    title: "Tableros Kanban",
+    description:
+      "Visualiza el progreso de tus proyectos con tableros Kanban intuitivos y personalizables.",
+    iconColor: "text-orange-600",
+    iconBgColor: "bg-orange-100",
+  },
+  {
+    id: "timer",
+    icon: Timer,
+    title: "Gestión de Tiempo",
+    description:
+      "Seguimiento automático del tiempo y estimaciones inteligentes para una planificación precisa.",
+    iconColor: "text-purple-600",
+    iconBgColor: "bg-purple-100",
+  },
+  {
+    id: "chart-no-axes-column",
+    icon: ChartNoAxesColumn,
+    title: "Análisis de Proyectos",
+    description:
+      "Obtén análisis detallados de tus proyectos para identificar oportunidades de mejora y optimización.",
+    iconColor: "text-red-600",
+    iconBgColor: "bg-red-100",
   },
 ];
