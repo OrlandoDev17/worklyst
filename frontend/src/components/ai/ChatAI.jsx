@@ -5,9 +5,17 @@ import { useAuth } from "../../context/AuthContext";
 
 export function ChatAI() {
   const { user } = useAuth();
+
   useEffect(() => {
-    // Si no hay usuario, no inicializar
-    if (!user?.id) return;
+    const token = localStorage.getItem("tokenAcceso");
+
+    // Verificar que el usuario y el token existan antes de inicializar
+    if (!user?.id || !token) {
+      console.warn(
+        "ChatAI: No se puede inicializar el chat sin userId o token",
+      );
+      return;
+    }
 
     try {
       const chat = createChat({
@@ -17,7 +25,8 @@ export function ChatAI() {
           method: "POST",
         },
         metadata: {
-          userId: user.id, // ID desde tu AuthContext
+          userId: user.id.toString(), // Asegurar que sea string
+          token: token,
         },
         mode: "embedded",
         showWelcomeScreen: true,

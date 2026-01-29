@@ -16,8 +16,9 @@ function FormField({ label, children }) {
   );
 }
 
-export function ProjectModal({ onClose, onAddProject }) {
-  const [members, setMembers] = useState([]);
+export function ProjectModal({ onClose, onAddProject, project = null }) {
+  const isEditing = !!project;
+  const [members, setMembers] = useState(project?.miembros || []);
   const [search, setSearch] = useState("");
   const [suggestions, setSuggestions] = useState([]);
 
@@ -61,13 +62,13 @@ export function ProjectModal({ onClose, onAddProject }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // e.currentTarget is the form element when triggered via onSubmit
     const formData = new FormData(e.currentTarget);
 
     onAddProject({
       nombre: formData.get("nombre"),
       descripcion: formData.get("descripcion"),
       miembros: members.map((m) => m.id),
+      ...(isEditing && { id: project.id }), // Pasar ID si estamos editando
     });
   };
 
@@ -82,10 +83,12 @@ export function ProjectModal({ onClose, onAddProject }) {
         <div className="flex items-center justify-between p-6 border-b border-gray-100 bg-gray-50/50">
           <div>
             <h2 className="text-xl font-bold text-gray-900">
-              Crear nuevo proyecto
+              {isEditing ? "Editar proyecto" : "Crear nuevo proyecto"}
             </h2>
             <p className="text-sm text-gray-500 mt-1">
-              Comienza tu colaboración
+              {isEditing
+                ? "Actualiza la información de tu proyecto"
+                : "Comienza tu colaboración"}
             </p>
           </div>
           <button
@@ -97,7 +100,7 @@ export function ProjectModal({ onClose, onAddProject }) {
         </div>
 
         <form
-          id="create-project-form"
+          id="project-form"
           onSubmit={handleSubmit}
           className="p-6 flex flex-col gap-6"
         >
@@ -106,6 +109,7 @@ export function ProjectModal({ onClose, onAddProject }) {
               type="text"
               name="nombre"
               required
+              defaultValue={project?.nombre || ""}
               className={INPUT_STYLES}
               placeholder="Ej: Rediseño de Sitio Web"
               autoFocus
@@ -116,6 +120,7 @@ export function ProjectModal({ onClose, onAddProject }) {
             <textarea
               name="descripcion"
               rows={3}
+              defaultValue={project?.descripcion || ""}
               className={`${INPUT_STYLES} resize-none`}
               placeholder="Describe brevemente el objetivo del proyecto..."
             />
@@ -205,11 +210,11 @@ export function ProjectModal({ onClose, onAddProject }) {
           </button>
           <button
             type="submit"
-            form="create-project-form"
+            form="project-form"
             className="px-6 py-2.5 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition-all shadow-lg shadow-blue-600/20 active:scale-95 text-sm flex items-center gap-2"
           >
             <Check className="size-4" />
-            Crear Proyecto
+            {isEditing ? "Guardar cambios" : "Crear Proyecto"}
           </button>
         </div>
       </article>

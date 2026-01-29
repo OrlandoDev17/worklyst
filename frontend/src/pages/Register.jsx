@@ -1,6 +1,5 @@
 // Constantes
 import { RegisterForm } from "../lib/constants";
-
 // Componentes
 import { AuthHeader } from "../components/auth/AuthHeader";
 import { FormInput } from "../components/auth/FormInput";
@@ -11,6 +10,9 @@ import { useAuth } from "../context/AuthContext";
 // Hooks
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
+
+// Animaciones
+import { fadeUp } from "../lib/animations";
 
 export function Register() {
   const [formData, setFormData] = useState({
@@ -29,6 +31,12 @@ export function Register() {
     }
   }, [success, user, navigate]);
 
+  useEffect(() => {
+    fadeUp(".register", {
+      ease: "back.out(1.8)",
+    });
+  }, []);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     await register(formData);
@@ -36,7 +44,7 @@ export function Register() {
 
   return (
     <main className="flex flex-col items-center justify-center h-screen">
-      <div className="flex flex-col gap-4 bg-white p-6 rounded-2xl shadow-lg max-w-md w-full">
+      <div className="flex flex-col gap-4 bg-white p-6 rounded-2xl shadow-lg max-w-md w-full register">
         <header className="flex flex-col items-center gap-2">
           <img className="w-20" src="/worklyst.svg" alt="Logo de Worklyst" />
           <h1 className="text-3xl font-extrabold tracking-wide">Worklyst</h1>

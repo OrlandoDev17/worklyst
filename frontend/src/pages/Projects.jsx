@@ -24,17 +24,17 @@ export function Projects() {
   };
 
   useEffect(() => {
-    console.log(user);
-    getProjects();
-  }, []);
+    if (user) {
+      getProjects();
+    }
+  }, [user]);
 
   return (
-    <main className="flex flex-col gap-8 max-w-7xl mx-auto pt-12 px-6 pb-20">
-      <ChatAI />
+    <main className="flex flex-col gap-8 max-w-10/12 2xl:max-w-9/12 mx-auto pt-12 px-6 pb-20">
       {/* Encabezado Principal */}
       <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div className="flex flex-col gap-2">
-          <p className="text-blue-600 font-medium">
+          <p className="text-xl text-blue-600 font-medium">
             👋 Bienvenido, {user?.nombre}
           </p>
           <h1 className="text-4xl font-bold text-gray-900">Mis Proyectos</h1>
@@ -58,14 +58,14 @@ export function Projects() {
 
       {/* Grid de Proyectos */}
       <section aria-label="Lista de proyectos activo">
-        <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-4">
           {projects.map((project) => (
-            <li key={project.id}>
+            <li className="col-span-2" key={project.id}>
               <ProjectCard {...project} />
             </li>
           ))}
 
-          <li>
+          <li className="col-span-2">
             <CreateProjectCard onClick={handleShowModal} />
           </li>
         </ul>
