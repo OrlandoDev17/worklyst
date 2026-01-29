@@ -16,10 +16,23 @@ export function useUsers() {
 export function UsersProvider({ children }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [user, setUser] = useState(null);
 
   const searchUsers = useCallback(async (query) => {
     if (!query) return [];
+
+    // Static check for AI System Bot to avoid unnecessary API calls and 404s
+    if (query.trim() === "IA System Bot") {
+      return [
+        {
+          id: "ia-system-bot",
+          nombre: "IA System Bot",
+          usuario: "IA System Bot",
+          email: "bot@worklyst.ai",
+          iniciales: "AI",
+        },
+      ];
+    }
+
     setLoading(true);
     try {
       const res = await api.get(`/api/users?nombre=${query}`);
@@ -42,28 +55,31 @@ export function UsersProvider({ children }) {
   const getUserById = useCallback(async (id) => {
     if (!id) return null;
 
-    // Guard: Return static bot data for system bot
+    // 1. Guard para el Bot (Ya lo tienes, está perfecto)
     if (
       id === "IA System Bot" ||
       id === "ia-system-bot" ||
       id === "IA_SYSTEM_BOT"
     ) {
-      const botUser = {
+      return {
         id: "ia-system-bot",
         nombre: "IA System Bot",
         email: "bot@worklyst.ai",
         iniciales: "AI",
       };
-      setUser(botUser);
-      return botUser;
     }
 
     try {
-      const res = await api.get(`/api/users/${id}`);
-      setUser(res.data);
+      // 2. Encodeamos el ID por si vienen caracteres especiales o espacios
+      const res = await api.get(`/api/users/${encodeURIComponent(id)}`);
       return res.data;
     } catch (err) {
-      console.error(`Error fetching user ${id}`, err);
+      // Si es 404, no es un error crítico de sistema, sino que el usuario no existe
+      if (err.response && err.response.status === 404) {
+        console.warn(`Usuario con ID ${id} no encontrado en la base de datos.`);
+      } else {
+        console.error(`Error fetch user ${id}`, err);
+      }
       return null;
     }
   }, []);
@@ -75,7 +91,6 @@ export function UsersProvider({ children }) {
         getUserById,
         loading,
         error,
-        user,
       }}
     >
       {children}

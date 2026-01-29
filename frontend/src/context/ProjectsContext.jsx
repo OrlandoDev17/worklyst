@@ -72,6 +72,58 @@ export function ProjectsProvider({ children }) {
     }
   };
 
+  const deleteProject = async (id) => {
+    try {
+      await api.delete(`/api/projects/${id}`);
+      setState({ loading: false, error: null, success: true });
+      setProjects((prev) => prev.filter((p) => p.id !== id));
+      addToast("Proyecto eliminado correctamente", "success");
+    } catch (error) {
+      const msg = error.response?.data?.mensaje || "Error al eliminar proyecto";
+      setState({ loading: false, error: msg, success: false });
+      addToast(msg, "error");
+    } finally {
+      setState((prev) => ({ ...prev, loading: false }));
+    }
+  };
+
+  const updateProject = async (id, projectData) => {
+    try {
+      await api.put(`/api/projects/${id}`, projectData);
+      setState({ loading: false, error: null, success: true });
+      setProjects((prev) =>
+        prev.map((p) => (p.id === id ? { ...p, ...projectData } : p)),
+      );
+      addToast("Proyecto actualizado correctamente", "success");
+    } catch (error) {
+      const msg =
+        error.response?.data?.mensaje || "Error al actualizar proyecto";
+      setState({ loading: false, error: msg, success: false });
+      addToast(msg, "error");
+    } finally {
+      setState((prev) => ({ ...prev, loading: false }));
+    }
+  };
+
+  const addMemberToProject = async (id, memberId) => {
+    try {
+      await api.post(`/api/projects/${id}/members`, { memberId });
+      setState({ loading: false, error: null, success: true });
+      setProjects((prev) =>
+        prev.map((p) =>
+          p.id === id ? { ...p, miembros: [...p.miembros, memberId] } : p,
+        ),
+      );
+      addToast("Miembro añadido correctamente", "success");
+    } catch (error) {
+      const msg = error.response?.data?.mensaje || "Error al añadir miembro";
+      setState({ loading: false, error: msg, success: false });
+      addToast(msg, "error");
+    } finally {
+      setState((prev) => ({ ...prev, loading: false }));
+    }
+  };
+
   return (
     <ProjectsContext.Provider
       value={{
@@ -81,6 +133,9 @@ export function ProjectsProvider({ children }) {
         addProject,
         getProjects,
         getProjectById,
+        deleteProject,
+        updateProject,
+        addMemberToProject,
       }}
     >
       {children}

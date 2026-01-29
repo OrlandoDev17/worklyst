@@ -1,6 +1,6 @@
 /* eslint-disable react-refresh/only-export-components */
 
-import { createContext, useContext, useState, useEffect } from "react";
+import { createContext, useContext, useState } from "react";
 import axios from "axios";
 import { useToast } from "./ToastContext";
 import api from "../lib/api";
@@ -19,16 +19,16 @@ export function AuthProvider({ children }) {
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [user, setUser] = useState(null);
-
-  useEffect(() => {
-    const storedUser = localStorage.getItem("usuario");
-    const storedToken = localStorage.getItem("tokenAcceso");
-
-    if (storedUser && storedToken) {
-      setUser(JSON.parse(storedUser));
+  const [user, setUser] = useState(() => {
+    try {
+      const storedUser = localStorage.getItem("usuario");
+      const storedToken = localStorage.getItem("tokenAcceso");
+      return storedUser && storedToken ? JSON.parse(storedUser) : null;
+    } catch (err) {
+      console.error("Error rehydrating auth state:", err);
+      return null;
     }
-  }, []);
+  });
 
   const { addToast } = useToast();
   const API_URL = import.meta.env.VITE_API_URL;
