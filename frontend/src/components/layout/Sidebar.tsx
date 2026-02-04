@@ -19,7 +19,7 @@ export function Sidebar() {
   return (
     <aside
       className="flex flex-col gap-6 fixed top-0 left-0 z-50 h-screen w-64 2xl:w-72 
-    bg-white p-4 rounded-r-lg shadow-sm border-r border-gray-100"
+    bg-white p-4 rounded-r-lg shadow-sm border-r border-gray-200"
     >
       <header className="flex items-center gap-2 border-b border-gray-200 pb-4">
         <button

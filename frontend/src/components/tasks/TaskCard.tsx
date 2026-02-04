@@ -1,24 +1,20 @@
 "use client";
 
-// Hooks
 import { useState } from "react";
-// Types
 import { Task } from "@/lib/types";
-// Icons
 import {
   ArrowRightLeft,
   Ellipsis,
   Pencil,
   Trash2,
   UserPlus,
+  Calendar,
 } from "lucide-react";
-// Components
 import { Dropdown, DropdownItem } from "@/components/common/Dropdown";
 import { ConfirmDeletion } from "@/components/common/ConfirmDeletion";
-// Constants
-import { colors, tagColors } from "@/lib/constants";
-// Contexts
 import { useTasks } from "@/contexts/TasksContext";
+import { useTaskStatuses } from "@/contexts/TaskStatusesContext";
+import { useProjects } from "@/contexts/ProjectsContext";
 import { AddTaskModal } from "./AddTaskModal";
 import { MemberAvatar } from "@/components/common/MemberAvatar";
 
@@ -27,83 +23,109 @@ export function TaskCard(task: Task) {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
 
-  const { titulo, descripcion, estado, asignado_a, fechaLimite } = task;
+  const {
+    id,
+    titulo,
+    descripcion,
+    estado,
+    asignado_a,
+    fecha_limite,
+    proyecto_id,
+  } = task;
 
-  const { deleteTask, updateTask } = useTasks();
+  const { deleteTask, updateTask, setIsDragging } = useTasks();
+  const { getStatusByKey, statuses } = useTaskStatuses();
+  const { selectedProject } = useProjects();
 
-  // --- FUNCIONES DE ACCION ---
+  // 1. Obtener info del usuario asignado desde el proyecto actual
+  const assignedUser = selectedProject?.miembros?.find(
+    (m) => m.id === asignado_a,
+  );
 
-  // == MOVER ==
+  // 2. Info visual del estado (color, nombre)
+  const statusInfo = getStatusByKey(estado);
 
-  const handleMove = async () => {
-    const estados: Task["estado"][] = ["pending", "in-progress", "completed"];
-    const currentIndex = estados.indexOf(estado);
-    const nextIndex = (currentIndex + 1) % estados.length;
-    await updateTask(task.id!, { estado: estados[nextIndex] });
+  // 3. Formatear fecha para la UI
+  const formattedDate = fecha_limite
+    ? new Date(fecha_limite).toLocaleDateString("es-ES", {
+        day: "2-digit",
+        month: "short",
+      })
+    : "Sin fecha";
+
+  // --- LÓGICA DE DRAG AND DROP ---
+  const handleDragStart = (e: React.DragEvent) => {
+    // Guardamos el ID de la tarea para que BoardColumn lo reciba
+    e.dataTransfer.setData("taskId", id!);
+    e.dataTransfer.effectAllowed = "move";
+    setIsDragging(true);
+  };
+
+  const handleDragEnd = () => {
+    setIsDragging(false);
+  };
+
+  // --- FUNCIONES DE ACCIÓN ---
+  const handleMoveViaDropdown = async () => {
+    if (statuses.length === 0) return;
+
+    // Buscamos el siguiente estado en la lista
+    const currentIndex = statuses.findIndex((s) => s.key === estado);
+    const nextIndex = (currentIndex + 1) % statuses.length;
+    const nextStatus = statuses[nextIndex];
+
+    await updateTask(id!, { estado: nextStatus.key });
     setShowDropdown(false);
   };
-
-  // == EDITAR ==
-
-  const handleEdit = () => {
-    setShowEditModal(true);
-    setShowDropdown(false);
-  };
-  // == ELIMINAR ==
-
-  const handleDelete = () => {
-    setShowDeleteModal(true);
-    setShowDropdown(false);
-  };
-
-  const handleDeleteSubmit = async () => {
-    return await deleteTask(task.id!);
-  };
-
-  // --- CONFIGURACION DEL DROPDOWN ---
 
   const items: DropdownItem[] = [
     {
       label: "Editar Tarea",
       icon: Pencil,
-      onClick: handleEdit,
+      onClick: () => {
+        setShowEditModal(true);
+        setShowDropdown(false);
+      },
     },
     {
-      label: "Asignar a",
-      icon: UserPlus,
-      onClick: handleEdit,
-    },
-    {
-      label: "Mover Tarea",
+      label: `Mover a: ${statuses[(statuses.findIndex((s) => s.key === estado) + 1) % statuses.length]?.name || "Siguiente"}`,
       icon: ArrowRightLeft,
-      onClick: handleMove,
+      onClick: handleMoveViaDropdown,
     },
     {
-      label: "Eliminar Tarea",
+      label: "Eliminar",
       icon: Trash2,
-      onClick: handleDelete,
+      onClick: () => {
+        setShowDeleteModal(true);
+        setShowDropdown(false);
+      },
       variant: "danger",
     },
   ];
 
-  // --- HELPERS ---
-
-  const handleDropdownToggle = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setShowDropdown(!showDropdown);
-  };
-
   return (
     <>
       <article
-        className={`flex flex-col gap-4 p-4 bg-white rounded-lg shadow-lg border border-gray-200 ${colors[estado]} transition-all duration-200 cursor-pointer`}
+        draggable
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+        className="flex flex-col gap-3 p-4 bg-white rounded-xl shadow-sm border border-gray-200 
+                   hover:shadow-md hover:border-blue-200 transition-all duration-200 group 
+                   cursor-grab active:cursor-grabbing"
       >
-        <header className="flex items-center justify-between border-b border-gray-200 pb-2">
-          <h3 className="font-medium">{titulo}</h3>
-          <div className="relative">
-            <button onClick={handleDropdownToggle}>
-              <Ellipsis className="p-2 size-10 rounded-full text-gray-600 hover:bg-gray-200 hover:text-blue-500 transition-colors duration-200" />
+        <header className="flex items-start justify-between gap-2">
+          <h3 className="font-bold text-gray-800 text-sm leading-tight line-clamp-2">
+            {titulo}
+          </h3>
+          <div className="relative shrink-0">
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                setShowDropdown(!showDropdown);
+              }}
+              className="p-1 rounded-lg hover:bg-gray-100 text-gray-400 transition-colors"
+            >
+              <Ellipsis className="size-5" />
             </button>
             <Dropdown
               isOpen={showDropdown}
@@ -112,43 +134,78 @@ export function TaskCard(task: Task) {
             />
           </div>
         </header>
-        <div className="flex flex-col gap-4 border-b border-gray-200 pb-4">
-          <p className="text-sm text-gray-600">{descripcion}</p>
+
+        <p className="text-xs text-gray-500 line-clamp-2 min-h-[32px]">
+          {descripcion || "Sin descripción adicional..."}
+        </p>
+
+        {/* Badge de Estado */}
+        <div className="flex">
           <span
-            className={`px-4 py-1.5 rounded text-xs font-medium w-fit border ${tagColors[estado].colors}`}
+            className="px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider border"
+            style={{
+              backgroundColor: `${statusInfo?.color}10`,
+              borderColor: `${statusInfo?.color}40`,
+              color: statusInfo?.color || "#6b7280",
+            }}
           >
-            {tagColors[estado].text}
+            {statusInfo?.name || estado}
           </span>
         </div>
+
+        <div className="h-px bg-gray-100 w-full my-1" />
+
         <footer className="flex items-center justify-between">
+          {/* Usuario Asignado */}
           <div className="flex items-center gap-2">
-            <h4 className="text-xs text-gray-600">Asignado a:</h4>
-            {asignado_a ? (
-              <MemberAvatar name={asignado_a} size="sm" rounded="lg" />
+            {assignedUser ? (
+              <div
+                className="flex items-center gap-1.5"
+                title={assignedUser.nombre}
+              >
+                <MemberAvatar
+                  name={assignedUser.nombre}
+                  size="sm"
+                  className="size-6 text-[9px] border border-white shadow-sm"
+                />
+                <span className="text-[11px] font-medium text-gray-600 truncate max-w-[70px]">
+                  {assignedUser.nombre?.split(" ")[0]}
+                </span>
+              </div>
             ) : (
-              <span className="text-xs text-gray-400">Sin asignar</span>
+              <div className="flex items-center gap-1 text-gray-400">
+                <UserPlus className="size-3.5" />
+                <span className="text-[10px] font-medium">Asignar</span>
+              </div>
             )}
           </div>
-          <span className="text-xs text-gray-600">
-            Fecha límite: {fechaLimite}
-          </span>
+
+          {/* Fecha Límite */}
+          <div
+            className={`flex items-center gap-1.5 px-2 py-1 rounded-md text-[10px] font-bold
+            ${estado === "completada" ? "bg-green-50 text-green-600" : "bg-gray-50 text-gray-500"}`}
+          >
+            <Calendar className="size-3" />
+            {formattedDate}
+          </div>
         </footer>
       </article>
 
-      {/* MODAL DE EDICION */}
-      <AddTaskModal
-        showModal={showEditModal}
-        closeModal={() => setShowEditModal(false)}
-        projectId={""}
-        taskToEdit={task}
-      />
+      {/* Modales */}
+      {showEditModal && (
+        <AddTaskModal
+          showModal={showEditModal}
+          closeModal={() => setShowEditModal(false)}
+          projectId={proyecto_id || ""}
+          taskToEdit={task}
+        />
+      )}
 
-      {/* MODAL DE ELIMINACION */}
       {showDeleteModal && (
         <ConfirmDeletion
           isOpen={showDeleteModal}
           onClose={() => setShowDeleteModal(false)}
-          onSubmit={handleDeleteSubmit}
+          onSubmit={() => deleteTask(id!)}
           type="task"
         />
       )}

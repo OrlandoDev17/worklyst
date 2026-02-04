@@ -6,5 +6,5 @@
 
 body {
   color: #222;
-  @apply bg-gray-100;
+  background-color: #fff;
 }

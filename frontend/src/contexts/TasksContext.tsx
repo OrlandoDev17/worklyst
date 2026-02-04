@@ -1,12 +1,6 @@
 "use client";
 
-import {
-  createContext,
-  useContext,
-  useState,
-  useCallback,
-  useMemo,
-} from "react";
+import { createContext, useContext, useState, useCallback } from "react";
 import { useAuth } from "./AuthContext";
 import { useToast } from "./ToastContext";
 import { Task } from "@/lib/types";
@@ -14,21 +8,13 @@ import axios from "axios";
 
 interface TasksContextType {
   tasks: Task[];
-  columns: {
-    todo: Task[];
-    inProgress: Task[];
-    done: Task[];
-  };
   loading: boolean;
   isDragging: boolean;
   setIsDragging: (isDragging: boolean) => void;
   fetchTasks: (projectId: string) => Promise<void>;
   createTask: (projectId: string, taskData: Partial<Task>) => Promise<boolean>;
   updateTask: (taskId: string, updates: Partial<Task>) => Promise<boolean>;
-  moveTask: (
-    taskId: string,
-    newStatus: "pending" | "in-progress" | "completed",
-  ) => Promise<boolean>;
+  moveTask: (taskId: string, newStatus: string) => Promise<boolean>;
   deleteTask: (taskId: string) => Promise<boolean>;
   setSelectedTask: (task: Task | null) => void;
   selectedTask: Task | null;
@@ -58,14 +44,6 @@ export function TasksProvider({ children }: { children: React.ReactNode }) {
       },
     };
   }, []);
-  // --- COLUMNAS DERIVADAS (Single Source of Truth) ---
-  const columns = useMemo(() => {
-    return {
-      todo: tasks.filter((t) => t.estado === "pending"),
-      inProgress: tasks.filter((t) => t.estado === "in-progress"),
-      done: tasks.filter((t) => t.estado === "completed"),
-    };
-  }, [tasks]);
 
   // --- OBTENER TAREAS ---
   const fetchTasks = useCallback(
@@ -97,54 +75,84 @@ export function TasksProvider({ children }: { children: React.ReactNode }) {
           `${API_URL}/api/projects/${projectId}/tasks`,
           {
             ...taskData,
-            estado: taskData.estado || "pending",
+            estado: taskData.estado || "pendiente",
           },
           getAuthHeaders(),
         );
 
-        // Actualizamos el estado local agregando la nueva tarea
-        setTasks((prev) => [...prev, response.data]);
+        // 1. Solo actualizamos el estado local con la data real que viene del server (trae el ID)
+        const newTask = response.data;
+        setTasks((prev) => [...prev, newTask]);
+
         addToast("Tarea creada correctamente", "success");
-        await fetchTasks(projectId);
-        return true;
+        return true; // Quitamos el await fetchTasks(projectId)
       } catch (error: any) {
-        const msg = error.response?.data?.mensaje || "Error al crear la tarea";
-        addToast(msg, "error");
+        addToast("Error al crear la tarea", "error");
         return false;
       } finally {
         setLoading(false);
       }
     },
-    [API_URL, APP_API_KEY, getAuthHeaders, addToast, fetchTasks],
+    [API_URL, getAuthHeaders, addToast], // Eliminamos fetchTasks de las dependencias
   );
 
   // --- ACTUALIZAR / MOVER TAREA (PUT) ---
+
   const updateTask = useCallback(
     async (taskId: string, updates: Partial<Task>) => {
-      // 1. Guardamos una referencia para revertir si falla
-      // Pero ojo: no podemos usar "originalTasks" directamente del scope si es vieja
-      let previousTasks: Task[] = [];
+      // 1. Buscamos la tarea ANTES de hacer nada para asegurar que tenemos la data para el payload
+      const taskToUpdate = tasks.find((t) => t.id === taskId);
 
-      setTasks((prev) => {
-        previousTasks = prev; // Guardamos el estado actual justo antes de cambiarlo
-        return prev.map((t) => (t.id === taskId ? { ...t, ...updates } : t));
-      });
+      if (!taskToUpdate) {
+        console.error("No se encontró la tarea con ID:", taskId);
+        return false;
+      }
+
+      // 2. Actualización optimista inmediata en la UI
+      setTasks((prev) =>
+        prev.map((t) => (t.id === taskId ? { ...t, ...updates } : t)),
+      );
 
       try {
+        // 3. Construimos el payload completo (Merge de datos)
+        const fullPayload = {
+          titulo: updates.titulo ?? taskToUpdate.titulo,
+          descripcion: updates.descripcion ?? taskToUpdate.descripcion,
+          estado: updates.estado ?? taskToUpdate.estado,
+          asignado_a: updates.asignado_a ?? taskToUpdate.asignado_a,
+          fecha_limite: updates.fecha_limite ?? taskToUpdate.fecha_limite,
+        };
+
+        console.log("🚀 Enviando PUT al backend:", fullPayload);
+
         await axios.put(
           `${API_URL}/api/tasks/${taskId}`,
-          updates,
+          fullPayload,
           getAuthHeaders(),
         );
+
         return true;
-      } catch (error) {
-        // 2. Si falla, restauramos el estado anterior
-        setTasks(previousTasks);
-        addToast("No se pudo actualizar la tarea", "error");
+      } catch (error: any) {
+        console.error("❌ Error API:", error.response?.data || error.message);
+
+        // 4. ROLLBACK: Revertimos al objeto original que encontramos en el paso 1
+        addToast("Error al sincronizar con el servidor", "error");
+        setTasks((prev) =>
+          prev.map((t) => (t.id === taskId ? taskToUpdate : t)),
+        );
+
         return false;
       }
     },
-    [API_URL, getAuthHeaders, addToast], // Quitamos 'tasks' de aquí
+    [API_URL, tasks, getAuthHeaders, addToast], // Es vital que 'tasks' esté aquí para encontrar taskToUpdate
+  );
+
+  // Asegúrate de que moveTask también sea async y espere a updateTask
+  const moveTask = useCallback(
+    async (taskId: string, newStatus: string) => {
+      return await updateTask(taskId, { estado: newStatus });
+    },
+    [updateTask],
   );
 
   // --- ELIMINAR TAREA (DELETE) ---
@@ -187,21 +195,12 @@ export function TasksProvider({ children }: { children: React.ReactNode }) {
     [API_URL, APP_API_KEY, getAuthHeaders, addToast],
   );
 
-  // Helper específico para el Drag & Drop
-  const moveTask = (
-    taskId: string,
-    newStatus: "pending" | "in-progress" | "completed",
-  ) => {
-    return updateTask(taskId, { estado: newStatus });
-  };
-
   // -- ELIMINAR TAREA --
 
   return (
     <TasksContext.Provider
       value={{
         tasks,
-        columns,
         loading,
         isDragging,
         setIsDragging,

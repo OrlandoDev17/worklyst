@@ -61,10 +61,19 @@ export interface Project {
 
 export interface Task {
   id?: string;
+  proyecto_id?: string;
   titulo: string;
   descripcion: string;
-  estado: "pending" | "in-progress" | "completed";
+  estado: string; // El API devuelve valores dinámicos como "pendiente", "en_progreso", etc.
   asignado_a?: string;
-  fechaLimite?: string;
-  creadoEn?: string;
+  fecha_limite?: string;
+  creado_en?: string;
+}
+
+export interface TaskStatus {
+  id: number;
+  name: string;
+  key: string;
+  color: string;
+  is_system: boolean;
 }

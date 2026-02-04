@@ -15,7 +15,7 @@ export function Breadcrumbs({ items }: BreadcrumbsProps) {
         <Link
           key={index}
           href={item.href}
-          className="text-blue-500 hover:underline"
+          className={`flex items-center gap-2 font-medium text-base 2xl:text-lg  hover:text-blue-500 transition-colors ${index === items.length - 1 ? "text-gray-700 font-semibold" : "text-gray-500"}`}
         >
           {item.label} {index < items.length - 1 && <ChevronRight />}
         </Link>

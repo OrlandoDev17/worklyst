@@ -147,7 +147,7 @@ export function ProjectCard(project: Project) {
     setShowDropdown(!showDropdown);
   };
 
-  console.log(miembros);
+  const maxVisibleMembers = 4;
 
   return (
     <>
@@ -155,9 +155,11 @@ export function ProjectCard(project: Project) {
         href={`/projects/${id}`}
         onClick={(e) => showDropdown && e.preventDefault()}
       >
-        <article className="flex flex-col h-full gap-4 p-6 rounded-xl border border-gray-200 shadow-lg hover:-translate-y-1 transition-all duration-300 bg-white">
-          <header className="flex items-center justify-between border-b border-gray-100 pb-3">
-            <h3 className="text-xl font-bold text-gray-800">{nombre}</h3>
+        <article className="flex flex-col h-full gap-4 p-6 rounded-xl border border-gray-200 shadow-lg shadow-gray-200 hover:shadow-blue-500/30 hover:border-blue-500 hover:-translate-y-1 transition-all duration-300 bg-white group">
+          <header className="flex items-center justify-between border-b border-gray-200 pb-2">
+            <h3 className="text-xl font-bold group-hover:text-blue-500 transition">
+              {nombre}
+            </h3>
             <div className="relative">
               <button
                 onClick={(e) => {
@@ -176,7 +178,7 @@ export function ProjectCard(project: Project) {
             </div>
           </header>
 
-          <div className="flex flex-col gap-3 flex-1">
+          <div className="flex flex-col gap-3 flex-1 border-b border-gray-200 pb-4">
             <span className="flex items-center gap-2 text-xs text-gray-400 font-medium">
               <Calendar className="size-3" /> CREADO EL {formatDate(creadoEn)}
             </span>
@@ -184,20 +186,32 @@ export function ProjectCard(project: Project) {
             <ProjectStateTag estado={estado as any} />
           </div>
 
-          <footer className="flex items-center justify-between pt-4 border-t border-gray-50">
+          <footer
+            className="flex items-center justify-between
+          "
+          >
             <ul className="flex items-center">
               {miembros
                 .sort((a, b) => (a.rol === "owner" ? -1 : 1))
+                .slice(0, maxVisibleMembers)
                 .map((miembro) => (
                   <li className="-ml-2 relative" key={miembro.id}>
                     <MemberAvatar name={miembro?.nombre} />
                   </li>
                 ))}
+              {miembros.length > maxVisibleMembers && (
+                <li className="-ml-2 relative">
+                  <div className="size-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 font-medium text-xs border-2 border-white">
+                    +{miembros.length - maxVisibleMembers}
+                  </div>
+                </li>
+              )}
             </ul>
 
             <div className="text-right">
-              <span className="flex items-center gap-1 text-[10px] text-gray-400 uppercase font-bold">
-                <RefreshCw className="size-3" /> {formatDate(actualizadoEn)}
+              <span className="flex items-center gap-1 text-xs text-gray-400 uppercase font-medium">
+                <RefreshCw className="size-3" /> Actualizado:{" "}
+                {formatDate(actualizadoEn)}
               </span>
             </div>
           </footer>
