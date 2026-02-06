@@ -12,6 +12,7 @@ import { ProjectsProvider } from "@/contexts/ProjectsContext";
 import { UsersProvider } from "@/contexts/UsersContext";
 import { TasksProvider } from "@/contexts/TasksContext";
 import { TaskStatusesProvider } from "@/contexts/TaskStatusesContext";
+import { GroupsProvider } from "@/contexts/GroupContext";
 // Components
 import { ChatbotAgent } from "@/components/chatbot/ChatbotAgent";
 import { Sidebar } from "./Sidebar";
@@ -32,27 +33,31 @@ export default function RouterLayout({
     <ToastProvider>
       <AuthProvider>
         <UsersProvider>
-          <ProjectsProvider>
-            <TaskStatusesProvider>
-              <TasksProvider>
-                <div className="min-h-screen flex flex-col">
-                  {showHeader && <Header />}
-                  {showSidebar && <Sidebar />}
-                  <div
-                    className={`flex-1 ${showSidebar ? "ml-64 2xl:ml-72" : ""}`}
-                  >
-                    {children}
-                  </div>
-                  <ChatbotAgent />
-                  {showFooter && (
-                    <div className={`${showSidebar ? "ml-64 2xl:ml-72" : ""}`}>
-                      <Footer />
+          <GroupsProvider>
+            <ProjectsProvider>
+              <TaskStatusesProvider>
+                <TasksProvider>
+                  <div className="min-h-screen flex flex-col">
+                    {showHeader && <Header />}
+                    {showSidebar && <Sidebar />}
+                    <div
+                      className={`flex-1 ${showSidebar ? "ml-64 2xl:ml-72" : ""}`}
+                    >
+                      {children}
                     </div>
-                  )}
-                </div>
-              </TasksProvider>
-            </TaskStatusesProvider>
-          </ProjectsProvider>
+                    <ChatbotAgent />
+                    {showFooter && (
+                      <div
+                        className={`${showSidebar ? "ml-64 2xl:ml-72" : ""}`}
+                      >
+                        <Footer />
+                      </div>
+                    )}
+                  </div>
+                </TasksProvider>
+              </TaskStatusesProvider>
+            </ProjectsProvider>
+          </GroupsProvider>
         </UsersProvider>
       </AuthProvider>
     </ToastProvider>

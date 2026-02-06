@@ -11,6 +11,7 @@ interface UsersContextType {
   fetchUserById: (id: string) => Promise<void>;
   userSearch: User[];
   selectedUser: User | null;
+  updateUser: (id: string, updates: Partial<User>) => Promise<void>;
 }
 
 const UsersContext = createContext<UsersContextType | null>(null);
@@ -102,9 +103,39 @@ export function UsersProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  // == ACTUALIZAR DATOS DE USUARIO ==
+
+  const updateUser = async (id: string, updates: Partial<User>) => {
+    if (!id || mounted) return;
+
+    setLoading(true);
+    setSelectedUser(null);
+
+    try {
+      const response = await axios.put(
+        `${API_URL}/api/users/${id}`,
+        updates,
+        getHeaders(),
+      );
+      setSelectedUser(response.data);
+      console.log(selectedUser);
+    } catch (error: any) {
+      console.error("Error al actualizar usuario", error.mensaje);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <UsersContext.Provider
-      value={{ loading, searchUsers, fetchUserById, userSearch, selectedUser }}
+      value={{
+        loading,
+        searchUsers,
+        fetchUserById,
+        userSearch,
+        selectedUser,
+        updateUser,
+      }}
     >
       {children}
     </UsersContext.Provider>

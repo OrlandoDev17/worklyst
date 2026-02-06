@@ -3,9 +3,11 @@
 import { Button } from "@/components/common/Button";
 import { MemberAvatar } from "@/components/common/MemberAvatar";
 import { useAuth } from "@/contexts/AuthContext";
+import { useUsers } from "@/contexts/UsersContext";
 
 export default function UserPage() {
   const { user } = useAuth();
+  const { updateUser } = useUsers();
 
   const PROFILE_FORM = [
     {
@@ -34,6 +36,16 @@ export default function UserPage() {
     },
   ];
 
+  const handleUpdateUser = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    const updates = {
+      nombre: formData.get("nombre") as string,
+      email: formData.get("email") as string,
+    };
+    await updateUser(user?.id!, updates);
+  };
+
   return (
     <main className="flex flex-col gap-4 2xl:gap-6 max-w-11/12 2xl:max-w-10/12 mx-auto mt-8">
       <header className="flex flex-col gap-2">
@@ -54,7 +66,11 @@ export default function UserPage() {
             </h3>
           </div>
         </header>
-        <form className="grid grid-cols-2 gap-8 w-full">
+        <form
+          id="profile-form"
+          onSubmit={handleUpdateUser}
+          className="grid grid-cols-2 gap-8 w-full"
+        >
           {PROFILE_FORM.map((item) => (
             <label className="flex flex-col gap-2">
               <span>{item.label}</span>
@@ -72,7 +88,9 @@ export default function UserPage() {
           <Button style="secondary" type="submit">
             Cancelar
           </Button>
-          <Button type="submit">Guardar Cambios</Button>
+          <Button type="submit" form="profile-form">
+            Guardar Cambios
+          </Button>
         </footer>
       </article>
     </main>

@@ -77,3 +77,20 @@ export interface TaskStatus {
   color: string;
   is_system: boolean;
 }
+
+export interface GroupMember {
+  id: string;
+  nombre: string;
+  email: string;
+  fecha_union: string;
+}
+
+export interface Group {
+  id: string;
+  nombre: string;
+  descripcion: string;
+  creador: string;
+  estado: string;
+  creado_en: string;
+  miembros?: GroupMember[]; // Solo viene en el GET individual
+}
