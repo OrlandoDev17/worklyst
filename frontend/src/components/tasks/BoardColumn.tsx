@@ -12,14 +12,15 @@ import { useTasks } from "@/contexts/TasksContext";
 import { Plus } from "lucide-react";
 
 interface BoardColumnProps {
-  statusKey: "pendiente" | "en_progreso" | "completada" | string; // El ID técnico del estado
-  column: string; // El nombre legible (ej: "Por hacer")
+  statusKey: "pendiente" | "en_progreso" | "completada" | string;
+  column: string;
   count: number;
   Icon: React.ComponentType<{ className: string }>;
   color: string;
   tasks: Task[];
   openModal: () => void;
   showAdd?: boolean;
+  className?: string;
 }
 
 export function BoardColumn({
@@ -31,9 +32,11 @@ export function BoardColumn({
   tasks,
   openModal,
   showAdd,
+  className,
 }: BoardColumnProps) {
   // Extraemos las funciones de movimiento del contexto
-  const { moveTask, setIsDragging } = useTasks();
+  const { moveTask, setIsDragging, draggedTaskId, setDraggedTaskId } =
+    useTasks();
 
   // Estado local para el feedback visual del Drag Over
   const [isOver, setIsOver] = useState(false);
@@ -43,6 +46,11 @@ export function BoardColumn({
   // Se ejecuta cuando una tarea entra en el área de la columna
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault(); // Obligatorio para permitir el drop
+    setIsOver(true);
+  };
+
+  const handleDragEnter = (e: React.DragEvent) => {
+    e.preventDefault();
     setIsOver(true);
   };
 
@@ -57,25 +65,32 @@ export function BoardColumn({
     setIsOver(false);
     setIsDragging(false);
 
-    // Recuperamos el ID de la tarea que guardamos en handleDragStart (dentro de TaskCard)
-    const taskId = e.dataTransfer.getData("taskId");
+    // Recuperamos el ID de la tarea
+    let taskId = e.dataTransfer.getData("taskId");
+
+    // Fallback para móviles que no soportan dataTransfer correctamente
+    if (!taskId && draggedTaskId) {
+      taskId = draggedTaskId;
+    }
 
     if (taskId) {
       // Movemos la tarea al estado que representa esta columna
       await moveTask(taskId, statusKey as any);
+      setDraggedTaskId(null);
     }
   };
 
   return (
     <article
       onDragOver={handleDragOver}
+      onDragEnter={handleDragEnter}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
-      className={`flex flex-col gap-4 rounded-2xl p-4 min-h-[500px] transition-all duration-200 border-2 ${
+      className={`flex flex-col gap-4 rounded-2xl p-4 min-h-[300px] md:min-h-[500px] transition-all duration-200 border-2 ${
         isOver
           ? "bg-blue-50/50 border-blue-300 border-dashed scale-[1.01]"
           : "bg-gray-100/60 border-transparent"
-      }`}
+      } ${className}`}
     >
       {/* Cabecera de la Columna */}
       <header className="flex items-center justify-between px-1">

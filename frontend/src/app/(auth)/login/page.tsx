@@ -6,7 +6,7 @@ import { LOGIN_FORM } from "@/lib/constants";
 import { AuthHeader } from "@/components/auth/AuthHeader";
 import { FormInput } from "@/components/auth/FormInput";
 // Hooks
-import { useState, useRef } from "react";
+import { useState, useRef, useLayoutEffect } from "react";
 import Link from "next/link";
 // Animaciones
 import { animations } from "@/lib/animations";
@@ -28,11 +28,13 @@ export default function LoginPage() {
   const { login, states } = useAuth();
   const { loading } = states;
 
-  animate(() => {
-    animations.fadeUp(".login", {
-      ease: "back.out(1.8)",
+  useLayoutEffect(() => {
+    animate(() => {
+      animations.fadeUp(".login", {
+        ease: "back.out(1.8)",
+      });
     });
-  });
+  }, [animate]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();

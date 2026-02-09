@@ -112,7 +112,7 @@ export function AddTaskModal({
     >
       <article
         ref={contentRef}
-        className="flex flex-col gap-6 bg-white p-8 rounded-2xl max-w-md w-full shadow-2xl animate-in zoom-in-95 duration-200"
+        className="flex flex-col gap-4 md:gap-6 bg-white p-5 md:p-8 rounded-2xl max-w-md w-full shadow-2xl animate-in zoom-in-95 duration-200"
       >
         <header className="flex items-center justify-between">
           <h4 className="text-2xl font-bold text-gray-900">

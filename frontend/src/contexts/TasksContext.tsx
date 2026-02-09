@@ -11,6 +11,8 @@ interface TasksContextType {
   loading: boolean;
   isDragging: boolean;
   setIsDragging: (isDragging: boolean) => void;
+  draggedTaskId: string | null;
+  setDraggedTaskId: (id: string | null) => void;
   fetchTasks: (projectId: string) => Promise<void>;
   createTask: (projectId: string, taskData: Partial<Task>) => Promise<boolean>;
   updateTask: (taskId: string, updates: Partial<Task>) => Promise<boolean>;
@@ -28,6 +30,7 @@ export function TasksProvider({ children }: { children: React.ReactNode }) {
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [loading, setLoading] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+  const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null);
 
   const { mounted, user } = useAuth();
   const { addToast } = useToast();
@@ -204,6 +207,8 @@ export function TasksProvider({ children }: { children: React.ReactNode }) {
         loading,
         isDragging,
         setIsDragging,
+        draggedTaskId,
+        setDraggedTaskId,
         fetchTasks,
         createTask,
         updateTask,

@@ -28,6 +28,16 @@ export default function ProjectsPage() {
     }
   }, [mounted, user, fetchProjects]);
 
+  useEffect(() => {
+    const handleRefreshData = () => {
+      fetchProjects();
+    };
+
+    window.addEventListener("refresh_worklyst_data", handleRefreshData);
+    return () =>
+      window.removeEventListener("refresh_worklyst_data", handleRefreshData);
+  }, [fetchProjects]);
+
   const welcomeMessage = useMemo(() => {
     if (!user?.nombre) return "Usuario";
     const names = user.nombre.split(" ");
@@ -46,12 +56,12 @@ export default function ProjectsPage() {
         <h2 className="text-lg 2xl:text-xl text-blue-500 font-semibold">
           👋 ¡Bienvenido, {mounted && welcomeMessage}!
         </h2>
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-0 justify-between">
           <div className="flex flex-col gap-2">
-            <h1 className="text-3xl 2xl:text-4xl font-semibold tracking-wide">
+            <h1 className="text-2xl md:text-3xl 2xl:text-4xl font-semibold tracking-wide">
               Mis Proyectos
             </h1>
-            <p className="text-sm 2xl:text-base text-gray-500">
+            <p className="text-xs md:text-sm 2xl:text-base text-gray-500">
               Administra tus proyectos grupales aquí
             </p>
           </div>
@@ -71,7 +81,7 @@ export default function ProjectsPage() {
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mt-2 2xl:mt-0">
+          <div className="grid grid-cols-2 xl:grid-cols-4 gap-6 mt-2 2xl:mt-0">
             {PROJECT_STATES.map((state) => {
               // Calcular valor dinamicamente
               const value =

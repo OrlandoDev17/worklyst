@@ -33,7 +33,8 @@ export function TaskCard(task: Task) {
     proyecto_id,
   } = task;
 
-  const { deleteTask, updateTask, setIsDragging } = useTasks();
+  const { deleteTask, updateTask, setIsDragging, setDraggedTaskId } =
+    useTasks();
   const { getStatusByKey, statuses } = useTaskStatuses();
   const { selectedProject } = useProjects();
 
@@ -59,6 +60,7 @@ export function TaskCard(task: Task) {
     e.dataTransfer.setData("taskId", id!);
     e.dataTransfer.effectAllowed = "move";
     setIsDragging(true);
+    setDraggedTaskId(id!);
   };
 
   const handleDragEnd = () => {
@@ -109,7 +111,7 @@ export function TaskCard(task: Task) {
         draggable
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
-        className="flex flex-col gap-3 p-4 bg-white rounded-xl shadow-sm border border-gray-200 
+        className="flex flex-col gap-3 p-3 md:p-4 bg-white rounded-xl shadow-sm border border-gray-200 
                    hover:shadow-md hover:border-blue-200 transition-all duration-200 group 
                    cursor-grab active:cursor-grabbing"
       >

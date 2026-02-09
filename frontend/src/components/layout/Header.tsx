@@ -79,6 +79,8 @@ export function Header() {
           setIsOpen={setIsOpen}
           NavbarItems={NAVBAR_ITEMS}
           showAuthButtons={showAuthButtons}
+          user={user}
+          logout={handleLogout}
         />
       </div>
     </header>

@@ -101,4 +101,24 @@ export const animations = {
     createAnimation(target, defaultProps.fadeIn, opts),
   fadeOut: (target: gsap.DOMTarget, opts?: AnimationOptions) =>
     createAnimation(target, { ...defaultProps.fadeOut, type: "to" }, opts),
+  menuIn: (target: gsap.DOMTarget, opts?: AnimationOptions) => {
+    const config = {
+      opacity: 0,
+      y: -20,
+      duration: 0.3,
+      ease: "power2.out",
+      ...opts,
+    };
+    return gsap.from(target, config);
+  },
+  menuOut: (target: gsap.DOMTarget, opts?: AnimationOptions) => {
+    const config = {
+      opacity: 0,
+      y: -20,
+      duration: 0.3,
+      ease: "power2.in",
+      ...opts,
+    };
+    return gsap.to(target, config);
+  },
 };

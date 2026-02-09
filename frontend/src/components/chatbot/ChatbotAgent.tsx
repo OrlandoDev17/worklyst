@@ -37,13 +37,23 @@ export function ChatbotAgent() {
   };
   const displayDate = `Hoy, ${formatTime(dateNow)}`;
 
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Auto-resize textarea
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto";
+      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+    }
+  }, [inputValue]);
+
   // Corrección: React.FormEvent para formularios
-  const handleSendMessage = async (e: React.ChangeEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  const handleSendMessage = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     if (!inputValue.trim() || isLoading) return;
 
     const userMessage = {
-      id: Date.now(), // Usamos timestamp para ID único
+      id: Date.now(),
       text: inputValue,
       user: "customer",
     };
@@ -54,14 +64,20 @@ export function ChatbotAgent() {
 
     const responseData = await callN8nAgent(inputValue);
 
-    // Si la IA ejecuto la accion, refrescamos la UI
     if (responseData?.actionExecuted === "project_created") {
-      await fetchProjects(); // Esto actualiza el estado global de los proyectos
+      await fetchProjects();
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage();
     }
   };
 
   return (
-    <div className="fixed bottom-4 2xl:bottom-8 right-8 z-50">
+    <div className="fixed bottom-4 md:bottom-4 2xl:bottom-8 right-8 z-50">
       <button
         className={`relative rounded-full p-3.5 hover:scale-105 transition-all duration-300 cursor-pointer group ${
           isChatOpen
@@ -89,8 +105,8 @@ export function ChatbotAgent() {
       </button>
 
       {isChatOpen && (
-        <article className="flex flex-col gap-4 border border-gray-200 absolute bottom-16 2xl:bottom-20 right-0 w-[400px] h-[450px] 2xl:h-[600px] bg-white rounded-xl shadow-2xl transition-all duration-300">
-          <header className="border-b border-gray-200 pb-4">
+        <article className="flex flex-col gap-2 md:gap-4 border border-gray-200 fixed md:absolute bottom-20 md:bottom-16 left-4 right-4 md:left-auto md:right-0 w-auto md:w-[400px] h-[70vh] md:h-[450px] 2xl:h-[600px] bg-white rounded-2xl shadow-2xl transition-all duration-300">
+          <header className="border-b border-gray-200 pb-2 md:pb-4">
             <div className="flex items-center justify-between px-4 pt-4">
               <div className="flex items-center gap-2">
                 <span className="flex items-center justify-center text-sm 2xl:text-lg font-medium text-white bg-blue-400 rounded-lg size-8 2xl:size-10 shadow-md">
@@ -138,20 +154,24 @@ export function ChatbotAgent() {
 
           <footer className="flex flex-col gap-2 px-4 pb-4">
             <form className="relative" onSubmit={handleSendMessage}>
-              <input
+              <textarea
+                ref={textareaRef}
+                rows={1}
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
+                onKeyDown={handleKeyDown}
                 disabled={isLoading}
-                className="flex items-center gap-2 bg-zinc-100 border border-gray-200 rounded-xl px-4 py-3 w-full focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 transition-all text-sm"
-                type="text"
+                className="flex items-center gap-2 bg-zinc-100 border border-gray-200 rounded-xl pl-4 pr-12 py-3 w-full focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 transition-all text-sm resize-none max-h-32 custom-scrollbar"
                 placeholder={
-                  isLoading ? "Worklyst está pensando..." : "Escribe tu mensaje"
+                  isLoading
+                    ? "Worklyst está pensando..."
+                    : "Escribe tu mensaje..."
                 }
               />
               <button
                 type="submit"
                 disabled={isLoading || !inputValue.trim()}
-                className="absolute top-1/2 -translate-y-1/2 right-2 flex items-center p-2 bg-white text-gray-400 rounded-md hover:bg-blue-500 hover:text-white transition-all duration-300 disabled:opacity-0"
+                className="absolute right-2 bottom-2 flex items-center p-2 bg-white text-gray-400 rounded-md hover:bg-blue-500 hover:text-white transition-all duration-300 disabled:opacity-0 shadow-sm"
               >
                 <Send className="size-4" />
               </button>
