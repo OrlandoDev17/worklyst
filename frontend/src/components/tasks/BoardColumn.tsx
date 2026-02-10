@@ -21,9 +21,11 @@ interface BoardColumnProps {
   openModal: () => void;
   showAdd?: boolean;
   className?: string;
+  style?: React.CSSProperties;
 }
 
 export function BoardColumn({
+  style,
   statusKey,
   column,
   count,
@@ -82,58 +84,80 @@ export function BoardColumn({
 
   return (
     <article
+      style={style}
       onDragOver={handleDragOver}
       onDragEnter={handleDragEnter}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
-      className={`flex flex-col gap-4 rounded-2xl p-4 min-h-[300px] md:min-h-[500px] transition-all duration-200 border-2 ${
+      className={`flex flex-col gap-5 bg-gray-100 rounded-2xl p-4 min-h-[500px] transition-all duration-300 border-2 ${
         isOver
-          ? "bg-blue-50/50 border-blue-300 border-dashed scale-[1.01]"
-          : "bg-gray-100/60 border-transparent"
+          ? "bg-blue-50/40 border-blue-200 border-dashed scale-[1.01]"
+          : "bg-gray-50/50 border-transparent hover:bg-gray-50/80"
       } ${className}`}
     >
-      {/* Cabecera de la Columna */}
-      <header className="flex items-center justify-between px-1">
-        <div className="flex items-center gap-2">
-          {/* El icono usa el color dinámico definido en el estado */}
+      {/* Cabecera de la Columna (Rediseñada) */}
+      <header className="flex items-center justify-between pb-2 border-b border-gray-200/50">
+        <div className="flex items-center gap-3">
+          {/* Icono con fondo sutil */}
           <div
-            className="p-1.5 rounded-lg shadow-sm"
-            style={{ backgroundColor: color }}
+            className="p-2 rounded-xl flex items-center justify-center"
+            style={{
+              backgroundColor: `${color}15`, // Color con 15% de opacidad
+              color: color,
+            }}
           >
-            <Icon className="size-4 text-white" />
+            <Icon className="size-5" />
           </div>
-          <h3 className="font-bold text-gray-700 text-sm tracking-tight uppercase">
-            {column}
-          </h3>
+
+          <div className="flex flex-col">
+            <h3 className="font-bold text-gray-800 text-sm tracking-tight capitalize">
+              {column.replace("_", " ")}
+            </h3>
+            <p className="text-[10px] text-gray-400 font-medium uppercase tracking-widest">
+              {count} {count === 1 ? "Tarea" : "Tareas"}
+            </p>
+          </div>
         </div>
 
-        {/* Contador circular */}
-        <span className="flex items-center justify-center min-w-[24px] h-6 px-2 text-[11px] font-bold text-gray-500 bg-gray-200 rounded-full">
-          {count}
-        </span>
+        {/* Botón rápido de añadir (Opcional en el header para que se vea más pro) */}
+        {showAdd && (
+          <button
+            onClick={openModal}
+            className="p-1.5 rounded-lg text-gray-400 hover:bg-white hover:text-blue-500 hover:shadow-sm transition-all"
+          >
+            <Plus className="size-4" />
+          </button>
+        )}
       </header>
 
       {/* Listado de Tareas */}
-      <section className="flex flex-col gap-3 overflow-y-auto max-h-[calc(100vh-320px)] pr-1 custom-scrollbar">
+      <section className="flex flex-col gap-3 overflow-y-auto max-h-[calc(100vh-340px)] pr-1 custom-scrollbar">
         {tasks.length > 0 ? (
-          tasks.map((task) => <TaskCard key={task.id} {...task} />)
+          <div className="flex flex-col gap-3">
+            {tasks.map((task) => (
+              <div key={task.id} className="task-card-anim">
+                <TaskCard {...task} />
+              </div>
+            ))}
+          </div>
         ) : (
-          // Estado vacío si no hay tareas
-          <div className="flex flex-col items-center justify-center py-10 border-2 border-dashed border-gray-200 rounded-xl">
-            <p className="text-xs text-gray-400 font-medium italic">
-              No hay tareas
+          <div className="flex flex-col items-center justify-center py-12 border-2 border-dashed border-gray-200/60 rounded-2xl bg-white/30">
+            <div className="p-3 bg-gray-100 rounded-full mb-2">
+              <Icon className="size-5 text-gray-300" />
+            </div>
+            <p className="text-[11px] text-gray-400 font-medium">
+              Sin tareas pendientes
             </p>
           </div>
         )}
 
-        {/* Botón rápido para añadir tarea (solo en la primera columna o donde se habilite) */}
         {showAdd && (
           <button
             onClick={openModal}
-            className="flex items-center justify-center gap-2 w-full py-3 mt-1 rounded-xl border-2 border-dashed border-gray-300 text-gray-400 hover:text-blue-500 hover:border-blue-300 hover:bg-white transition-all text-sm font-medium group"
+            className="flex items-center justify-center gap-2 w-full py-3 mt-2 rounded-xl border-2 border-dashed border-gray-200 text-gray-400 hover:text-blue-600 hover:border-blue-200 hover:bg-white transition-all text-xs font-semibold group bg-transparent"
           >
-            <Plus className="size-4 group-hover:scale-110 transition-transform" />
-            Añadir Tarea
+            <Plus className="size-3.5 group-hover:rotate-90 transition-transform duration-300" />
+            Nueva tarea
           </button>
         )}
       </section>

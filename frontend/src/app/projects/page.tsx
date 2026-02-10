@@ -3,6 +3,9 @@
 // Components
 import { CreateProjectCard } from "@/components/projects/CreateProjectCard";
 import { ProjectStateCard } from "@/components/projects/ProjectStateCard";
+// Skeleton Components
+import { ProjectStateSkeleton } from "@/components/projects/skeleton/ProjectStateSkeleton";
+import { ProjectCardSkeleton } from "@/components/projects/skeleton/ProjectCardSkeleton";
 // Hooks
 import { useEffect, useMemo, useState } from "react";
 // Contexts
@@ -11,32 +14,70 @@ import { useProjects } from "@/contexts/ProjectsContext";
 //Constants
 import { PROJECT_STATES } from "@/lib/constants";
 // Icons
-import { Plus, Loader2 } from "lucide-react";
+import { Plus } from "lucide-react";
 import { ProjectCard } from "@/components/projects/ProjectCard";
 import { CreateProjectModal } from "@/components/projects/CreateProjectModal";
 import { Button } from "@/components/common/Button";
 
+import gsap from "gsap";
+
 export default function ProjectsPage() {
   const [showModal, setShowModal] = useState(false);
+  const [isDataReady, setIsDataReady] = useState(false);
 
   const { fetchProjects, projects, createProject, states } = useProjects();
   const { user, mounted } = useAuth();
+  const isLoading = states.loading && !isDataReady;
 
   useEffect(() => {
-    if (mounted && user) {
-      fetchProjects();
+    async function loadData() {
+      if (mounted && user) {
+        await fetchProjects();
+
+        setIsDataReady(true);
+      }
     }
+
+    loadData();
   }, [mounted, user, fetchProjects]);
 
   useEffect(() => {
-    const handleRefreshData = () => {
-      fetchProjects();
-    };
+    async function handleRefreshData() {
+      if (mounted && user) {
+        await fetchProjects();
+
+        setIsDataReady(true);
+      }
+    }
+
+    handleRefreshData();
 
     window.addEventListener("refresh_worklyst_data", handleRefreshData);
     return () =>
       window.removeEventListener("refresh_worklyst_data", handleRefreshData);
   }, [fetchProjects]);
+
+  useEffect(() => {
+    // Solo animamos si ya no esta cargando y hay proyectos
+    if (!isLoading && projects.length > 0) {
+      gsap.fromTo(
+        ".project-card-anim",
+        {
+          opacity: 0,
+          y: 20,
+          scale: 0.95,
+        },
+        {
+          opacity: 1,
+          y: 0,
+          scale: 1,
+          duration: 0.6,
+          ease: "power3.out",
+          stagger: 0.1,
+        },
+      );
+    }
+  }, [isLoading, projects.length]);
 
   const welcomeMessage = useMemo(() => {
     if (!user?.nombre) return "Usuario";
@@ -72,13 +113,11 @@ export default function ProjectsPage() {
         </div>
       </header>
 
-      {states.loading && projects.length === 0 ? (
-        <div className="flex h-64 w-full items-center justify-center">
-          <div className="flex flex-col items-center gap-4">
-            <Loader2 className="h-12 w-12 animate-spin text-blue-500" />
-            <p className="text-gray-500 font-medium">Cargando proyectos...</p>
-          </div>
-        </div>
+      {isLoading ? (
+        <>
+          <ProjectStateSkeleton />
+          <ProjectCardSkeleton />
+        </>
       ) : (
         <>
           <div className="grid grid-cols-2 xl:grid-cols-4 gap-6 mt-2 2xl:mt-0">
@@ -90,20 +129,25 @@ export default function ProjectsPage() {
                   : projects.filter((p) => p.estado === state.id).length;
 
               return (
-                <ProjectStateCard key={state.id} {...state} value={value} />
+                <div key={state.id} className="project-card-anim">
+                  <ProjectStateCard {...state} value={value} />
+                </div>
               );
             })}
           </div>
-          <ul className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 min-h-48 2xl:min-h-72 mt-4 2xl:mt-0">
+          <ul
+            className={`grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 min-h-48 2xl:min-h-72 mt-4 2xl:mt-0 transition-opacity duration-500 ${isDataReady ? "opacity-100" : "opacity-0"}`}
+          >
             {projects.map((project, index) => (
               <li
                 key={project?.id || `project-${index}`}
-                className="col-span-2"
+                className="col-span-2 project-card-anim"
+                style={{ opacity: 0 }}
               >
                 <ProjectCard {...project} />
               </li>
             ))}
-            <li className="col-span-2">
+            <li className="col-span-2 project-card-anim" style={{ opacity: 0 }}>
               <CreateProjectCard onClick={handleShowModal} />
             </li>
           </ul>

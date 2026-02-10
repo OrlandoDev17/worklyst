@@ -6,6 +6,8 @@ import { AddMemberModal } from "./AddMemberModal";
 import { CreateProjectModal } from "./CreateProjectModal";
 import { RemoveMemberModal } from "./RemoveMemberModal";
 import { ConfirmDeletion } from "@/components/common/ConfirmDeletion";
+import { MemberAvatar } from "@/components/common/MemberAvatar";
+import { ProgressBar } from "@/components/common/ProggresBar";
 // Hooks
 import { useState } from "react";
 // Icons
@@ -22,8 +24,6 @@ import {
 import type { Project, User } from "@/lib/types";
 // Contexts
 import { useProjects } from "@/contexts/ProjectsContext";
-import { useUsers } from "@/contexts/UsersContext";
-import { MemberAvatar } from "../common/MemberAvatar";
 
 export function ProjectCard(project: Project) {
   const {
@@ -31,7 +31,6 @@ export function ProjectCard(project: Project) {
     nombre,
     descripcion,
     estado,
-    creadorId,
     creadoEn,
     actualizadoEn,
     miembros = [],
@@ -139,14 +138,6 @@ export function ProjectCard(project: Project) {
     },
   ];
 
-  // --- HELPERS ---
-
-  const handleDropdownToggle = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setShowDropdown(!showDropdown);
-  };
-
   const maxVisibleMembers = 4;
 
   return (
@@ -184,6 +175,7 @@ export function ProjectCard(project: Project) {
             </span>
             <p className="text-gray-600 text-sm line-clamp-3">{descripcion}</p>
             <ProjectStateTag estado={estado as any} />
+            <ProgressBar totalTasks={10} completedTasks={4} />
           </div>
 
           <footer
