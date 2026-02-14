@@ -59,6 +59,12 @@ const router = Router();
  *         rol:
  *           type: string
  *           description: Rol del usuario en el proyecto (solo en listados de usuario)
+ *         totalTareas:
+ *           type: integer
+ *           description: Cantidad total de tareas en el proyecto
+ *         tareasCompletadas:
+ *           type: integer
+ *           description: Cantidad de tareas completadas en el proyecto
  */
 
 /**

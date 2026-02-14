@@ -9,6 +9,7 @@ import {
     eliminarMiembro,
     obtenerMiembrosProyecto
 } from '../models/projectModel';
+import { contarTareasPorProyecto } from '../models/taskModel';
 import { buscarUsuarioPorId } from '../models/userModel';
 import { buscarRolPorNombre } from '../models/roleModel';
 import { AuthRequest } from '../middleware/authMiddleware';
@@ -119,10 +120,13 @@ export const obtenerUno = async (req: AuthRequest, res: Response): Promise<void>
         }
 
         const miembros = await obtenerMiembrosProyecto(id as string);
+        const tareasCount = await contarTareasPorProyecto(id as string);
 
         res.json({
             ...mapearProyecto(proyecto),
-            miembros: miembros.map(mapearMiembro)
+            miembros: miembros.map(mapearMiembro),
+            totalTareas: tareasCount.total,
+            tareasCompletadas: tareasCount.completed
         });
     } catch (error) {
         res.status(500).json({ mensaje: 'Error al obtener el proyecto' });

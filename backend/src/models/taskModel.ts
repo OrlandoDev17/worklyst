@@ -159,3 +159,22 @@ export const eliminarTarea = async (id: string) => {
     const sql = `DELETE FROM tasks WHERE id = $1`;
     await ejecutar(sql, [id]);
 };
+
+export const contarTareasPorProyecto = async (projectId: string): Promise<{ total: number; completed: number }> => {
+    // Obtener ID del estado 'completed'
+    const statusResult = await consulta(`SELECT id FROM task_statuses WHERE key = 'completed'`);
+    const completedId = statusResult.length > 0 ? statusResult[0].id : null;
+
+    const sqlTotal = `SELECT COUNT(*) as total FROM tasks WHERE project_id = $1`;
+    const totalResult = await consulta(sqlTotal, [projectId]);
+    const total = parseInt(totalResult[0]?.total || '0', 10);
+
+    let completed = 0;
+    if (completedId) {
+        const sqlCompleted = `SELECT COUNT(*) as completed FROM tasks WHERE project_id = $1 AND status_id = $2`;
+        const completedResult = await consulta(sqlCompleted, [projectId, completedId]);
+        completed = parseInt(completedResult[0]?.completed || '0', 10);
+    }
+
+    return { total, completed };
+};
