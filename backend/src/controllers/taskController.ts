@@ -164,6 +164,7 @@ export const actualizar = async (req: AuthRequest, res: Response): Promise<void>
             const statusId = await resolverStatusId(estado);
             if (statusId) {
                 datosActualizados.status_id = statusId;
+                datosActualizados.estado = estado;
             } else {
                 res.status(400).json({ mensaje: 'Estatus no válido' });
                 return;
