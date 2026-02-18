@@ -17,7 +17,11 @@ import { PROJECT_STATES } from "@/lib/constants";
 import { Plus } from "lucide-react";
 import { ProjectCard } from "@/components/projects/ProjectCard";
 import { CreateProjectModal } from "@/components/projects/CreateProjectModal";
+import { ConfirmDeletion } from "@/components/common/ConfirmDeletion";
+import { AddMemberModal } from "@/components/projects/AddMemberModal";
+import { RemoveMemberModal } from "@/components/projects/RemoveMemberModal";
 import { Button } from "@/components/common/Button";
+import type { Project, User } from "@/lib/types";
 
 import gsap from "gsap";
 
@@ -25,7 +29,25 @@ export default function ProjectsPage() {
   const [showModal, setShowModal] = useState(false);
   const [isDataReady, setIsDataReady] = useState(false);
 
-  const { fetchProjects, projects, createProject, states } = useProjects();
+  // States for card modals
+  const [projectToEdit, setProjectToEdit] = useState<Project | null>(null);
+  const [projectToDelete, setProjectToDelete] = useState<Project | null>(null);
+  const [projectToAddMember, setProjectToAddMember] = useState<Project | null>(
+    null,
+  );
+  const [projectToRemoveMember, setProjectToRemoveMember] =
+    useState<Project | null>(null);
+
+  const {
+    fetchProjects,
+    projects,
+    createProject,
+    states,
+    updateProject,
+    deleteProject,
+    addMember,
+    removeMember,
+  } = useProjects();
   const { user, mounted } = useAuth();
   const isLoading = states.loading && !isDataReady;
 
@@ -91,6 +113,32 @@ export default function ProjectsPage() {
     setShowModal(!showModal);
   };
 
+  // --- Modal Handlers ---
+
+  const handleEditSubmit = async (projectData: Project) => {
+    const success = await updateProject(projectToEdit!.id!, projectData);
+    if (success) setProjectToEdit(null);
+    return success;
+  };
+
+  const handleDeleteSubmit = async () => {
+    const success = await deleteProject(projectToDelete!.id!);
+    if (success) setProjectToDelete(null);
+    return success;
+  };
+
+  const handleAddMemberSubmit = async (user: User) => {
+    const success = await addMember(projectToAddMember!.id!, user.id!, 0);
+    if (success) setProjectToAddMember(null);
+    return success;
+  };
+
+  const handleRemoveMemberSubmit = async (userId: string) => {
+    const success = await removeMember(projectToRemoveMember!.id!, userId);
+    if (success) setProjectToRemoveMember(null);
+    return success;
+  };
+
   return (
     <main className="min-h-screen flex flex-col gap-4 2xl:gap-8 mt-8 2xl:mt-12 max-w-11/12 2xl:max-w-10/12 mx-auto relative">
       <header className="flex flex-col gap-4">
@@ -144,7 +192,13 @@ export default function ProjectsPage() {
                 className="col-span-2 project-card-anim"
                 style={{ opacity: 0 }}
               >
-                <ProjectCard {...project} />
+                <ProjectCard
+                  {...project}
+                  onEdit={(p) => setProjectToEdit(p)}
+                  onDelete={(p) => setProjectToDelete(p)}
+                  onAddMember={(p) => setProjectToAddMember(p)}
+                  onRemoveMember={(p) => setProjectToRemoveMember(p)}
+                />
               </li>
             ))}
             <li className="col-span-2 project-card-anim" style={{ opacity: 0 }}>
@@ -160,6 +214,46 @@ export default function ProjectsPage() {
         showModal={showModal}
         setShowModal={setShowModal}
       />
+
+      {/* Modal de Edición */}
+      {projectToEdit && (
+        <CreateProjectModal
+          showModal={!!projectToEdit}
+          setShowModal={(show) => !show && setProjectToEdit(null)}
+          initialData={projectToEdit}
+          onSubmit={handleEditSubmit}
+        />
+      )}
+
+      {/* Modal de Eliminación */}
+      {projectToDelete && (
+        <ConfirmDeletion
+          type="project"
+          isOpen={!!projectToDelete}
+          onClose={() => setProjectToDelete(null)}
+          onSubmit={handleDeleteSubmit}
+        />
+      )}
+
+      {/* Modal de Agregar Miembro */}
+      {projectToAddMember && (
+        <AddMemberModal
+          isOpen={!!projectToAddMember}
+          onClose={() => setProjectToAddMember(null)}
+          onAddMember={handleAddMemberSubmit}
+          currentMembers={projectToAddMember.miembros}
+        />
+      )}
+
+      {/* Modal de Eliminar Miembro */}
+      {projectToRemoveMember && (
+        <RemoveMemberModal
+          isOpen={!!projectToRemoveMember}
+          onClose={() => setProjectToRemoveMember(null)}
+          onRemoveMember={handleRemoveMemberSubmit}
+          members={projectToRemoveMember.miembros || []}
+        />
+      )}
     </main>
   );
 }

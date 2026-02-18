@@ -57,6 +57,8 @@ export interface Project {
   actualizadoEn?: string;
   miembros?: ProjectMember[];
   creadorId?: string;
+  totalTareas?: number;
+  tareasCompletadas?: number;
 }
 
 export interface Task {

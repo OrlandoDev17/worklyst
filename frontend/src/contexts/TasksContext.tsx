@@ -88,7 +88,8 @@ export function TasksProvider({ children }: { children: React.ReactNode }) {
         setTasks((prev) => [...prev, newTask]);
 
         addToast("Tarea creada correctamente", "success");
-        return true; // Quitamos el await fetchTasks(projectId)
+        await fetchTasks(projectId);
+        return true;
       } catch (error: any) {
         addToast("Error al crear la tarea", "error");
         return false;

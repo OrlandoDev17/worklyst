@@ -99,8 +99,9 @@ export function AddTaskModal({
     }
 
     if (success) {
-      // Resetear estados y cerrar
+      // Solo resetear y cerrar si la operación fue exitosa
       setSelectedUser(null);
+      (e.target as HTMLFormElement).reset(); // Resetear el formulario HTML
       closeModal();
     }
   };
@@ -127,7 +128,11 @@ export function AddTaskModal({
           </button>
         </header>
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+        <form
+          key={showModal ? taskToEdit?.id || "new-task" : "closed"}
+          onSubmit={handleSubmit}
+          className="flex flex-col gap-5"
+        >
           {/* Título */}
           <div className="flex flex-col gap-1">
             <label className="text-sm font-bold text-gray-800">Título</label>

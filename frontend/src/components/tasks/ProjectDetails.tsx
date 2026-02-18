@@ -14,18 +14,29 @@ import { Button } from "../common/Button";
 import { Plus } from "lucide-react";
 import { BoardColumn } from "./BoardColumn";
 import { AddTaskModal } from "./AddTaskModal";
+import { ConfirmDeletion } from "@/components/common/ConfirmDeletion";
 import { BoardColumnSkeleton } from "./skeleton/BoardColumnSkeleton";
+import { ProgressBar } from "@/components/common/ProggresBar";
 // Icons
-import { Circle, Clock, CheckCircle2, LucideIcon } from "lucide-react";
+import { Circle, Clock, CheckCircle2 } from "lucide-react";
 // Gsap
 import gsap from "gsap";
+import { Task } from "@/lib/types";
 
 export function ProjectDetails({ projectId }: { projectId: string }) {
   const [showAddTaskModal, setShowAddTaskModal] = useState(false);
+  const [taskToEdit, setTaskToEdit] = useState<Task | null>(null);
+  const [taskToDelete, setTaskToDelete] = useState<Task | null>(null);
 
   const { mounted, user } = useAuth();
   const { getProjectById, selectedProject, states } = useProjects();
-  const { fetchTasks, tasks, loading: tasksLoading, isDragging } = useTasks();
+  const {
+    fetchTasks,
+    tasks,
+    loading: tasksLoading,
+    isDragging,
+    deleteTask,
+  } = useTasks();
   const { statuses, loading: statusesLoading } = useTaskStatuses();
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -80,6 +91,36 @@ export function ProjectDetails({ projectId }: { projectId: string }) {
   // RECUPERAR TODOS LOS DATOS DEL PROYECTO
   const { nombre, descripcion, miembros } = selectedProject || {};
 
+  // Calcular progreso dinámico basado en los mismos criterios que el tablero
+  const totalTasks = tasks.length;
+
+  const completedStatus = statuses.find(
+    (s) =>
+      ["completada", "completed", "completado"].includes(
+        (s.key || "").toLowerCase(),
+      ) ||
+      ["completada", "completed", "completado"].includes(
+        (s.name || "").toLowerCase(),
+      ),
+  );
+
+  const completedTasks = tasks.filter((t) => {
+    if (!t.estado) return false;
+    const estadoStr = String(t.estado).toLowerCase().trim();
+    const completedKey = (completedStatus?.key || "___none___")
+      .toLowerCase()
+      .trim();
+    const completedName = (completedStatus?.name || "___none___")
+      .toLowerCase()
+      .trim();
+
+    return (
+      estadoStr === completedKey ||
+      estadoStr === completedName ||
+      ["completada", "completed", "completado", "terminada"].includes(estadoStr)
+    );
+  }).length;
+
   const breadcrumbsItems = [
     { label: "Inicio", href: "/" },
     { label: "Proyectos", href: "/projects" },
@@ -124,64 +165,99 @@ export function ProjectDetails({ projectId }: { projectId: string }) {
   };
 
   return (
-    <section className="flex flex-col gap-6 2xl:gap-8">
-      <Breadcrumbs items={breadcrumbsItems} />
+    <section className="flex flex-col gap-6 2xl:gap-8 pb-10">
+      <div className="px-4 md:px-0">
+        <Breadcrumbs items={breadcrumbsItems} />
+      </div>
 
-      <header className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 md:gap-0 border-b-2 border-gray-200 pb-6">
+      <header className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 md:gap-4 px-4 md:px-0 border-b-2 border-gray-100 pb-8 relative group">
         <div
-          className={`flex flex-col gap-2 ${!showBoardSkeleton ? "header-anim" : ""}`}
+          className={`flex flex-col gap-3 flex-1 ${!showBoardSkeleton ? "header-anim" : ""}`}
           style={{ opacity: showBoardSkeleton ? 1 : 0 }}
         >
-          <h1 className="text-2xl 2xl:text-3xl font-bold max-w-xl">
-            {nombre || (
-              <div className="h-8 w-64 bg-gray-200 rounded animate-pulse" />
-            )}
-          </h1>
-          <div className="text-gray-500 text-sm 2xl:text-base max-w-xs md:max-w-xl">
+          <div className="flex items-center gap-3">
+            <h1 className="text-3xl md:text-4xl 2xl:text-5xl font-black text-gray-900 tracking-tight transition-all">
+              {nombre || (
+                <div className="h-10 w-64 bg-gray-200 rounded-xl animate-pulse" />
+              )}
+            </h1>
+            <div className="hidden md:block">
+              <span className="px-3 py-1 rounded-full bg-blue-50 text-blue-600 text-[10px] font-black uppercase tracking-widest border border-blue-100 shadow-sm">
+                Proyecto Activo
+              </span>
+            </div>
+          </div>
+
+          <div className="text-gray-500 text-sm 2xl:text-lg max-w-2xl leading-relaxed">
             {descripcion || (
               <div className="flex flex-col gap-2 mt-2">
-                <div className="h-3 w-full bg-gray-100 rounded animate-pulse" />
-                <div className="h-3 w-2/3 bg-gray-100 rounded animate-pulse" />
+                <div className="h-4 w-full bg-gray-100 rounded-lg animate-pulse" />
+                <div className="h-4 w-2/3 bg-gray-100 rounded-lg animate-pulse" />
               </div>
             )}
           </div>
+
+          {!showBoardSkeleton && totalTasks > 0 && (
+            <div className="max-w-md w-full mt-4">
+              <ProgressBar
+                totalTasks={totalTasks}
+                completedTasks={completedTasks}
+              />
+            </div>
+          )}
         </div>
 
-        <div className="flex flex-col md:flex-row items-center gap-6">
-          <ul className="flex items-center border-0 md:border-r border-gray-200 pb-0 pr-4">
+        <div className="flex flex-col sm:flex-row items-center gap-6 w-full md:w-auto">
+          <ul className="flex items-center border-0 md:border-r border-gray-100 pr-6">
             {miembros ? (
               miembros.map(({ id, nombre }) => (
-                <li key={id} className="-ml-2">
-                  <MemberAvatar name={nombre} />
+                <li key={id} className="-ml-3 first:ml-0 relative group/avatar">
+                  <MemberAvatar
+                    name={nombre}
+                    className="ring-4 ring-white shadow-md hover:ring-blue-400 hover:-translate-y-1 transition-all"
+                  />
                 </li>
               ))
             ) : (
-              // Skeleton de miembros
-              <div className="flex items-center -space-x-2 animate-pulse">
+              <div className="flex items-center -space-x-3 animate-pulse">
                 {[1, 2, 3].map((i) => (
                   <div
                     key={i}
-                    className="size-10 rounded-full bg-gray-200 border-2 border-white"
+                    className="size-11 rounded-full bg-gray-200 border-4 border-white"
                   />
                 ))}
               </div>
             )}
           </ul>
-          <Button onClick={handleAddTaskModal} disabled={showBoardSkeleton}>
-            <Plus />
-            Nueva Tarea
+          <Button
+            onClick={handleAddTaskModal}
+            disabled={showBoardSkeleton}
+            className="w-full sm:w-auto shadow-xl shadow-blue-500/20 hover:shadow-blue-500/40 transition-shadow active:scale-95"
+          >
+            <Plus className="size-5" />
+            <span className="font-bold">Nueva Tarea</span>
           </Button>
         </div>
       </header>
 
-      {/* ÁREA DEL TABLERO */}
+      {/* ÁREA DEL TABLERO - Glassmorphism & Patterns */}
       <section
         ref={scrollContainerRef}
         onDragOver={handleDragOverContainer}
-        className={`flex md:grid md:grid-cols-3 gap-4 md:gap-6 min-h-[calc(100vh-280px)] overflow-x-auto pb-8 px-4 md:px-0 -mx-4 md:mx-0 scrollbar-hide select-none transition-all duration-300 ${
-          isDragging ? "" : "snap-x snap-mandatory font-medium"
+        className={`relative flex md:grid md:grid-cols-3 gap-6 md:gap-8 min-h-[calc(100vh-320px)] overflow-x-auto pb-12 px-4 md:px-0 -mx-4 md:mx-0 scrollbar-hide transition-all duration-300 ${
+          isDragging ? "bg-blue-50/20 cursor-grabbing" : "snap-x snap-mandatory"
         }`}
       >
+        {/* Background Pattern Sutil */}
+        <div
+          className="absolute inset-0 opacity-[0.03] pointer-events-none"
+          style={{
+            backgroundImage:
+              "radial-gradient(circle at 2px 2px, #3b82f6 1px, transparent 0)",
+            backgroundSize: "32px 32px",
+          }}
+        />
+
         {showBoardSkeleton ? (
           <BoardColumnSkeleton />
         ) : (
@@ -190,42 +266,62 @@ export function ProjectDetails({ projectId }: { projectId: string }) {
             .map((status) => (
               <div
                 key={status.id}
-                className="column-anim"
+                className="column-anim shrink-0 w-[85vw] md:w-auto snap-center first:pl-2 first:md:pl-0 last:pr-4 last:md:pr-0"
                 style={{ opacity: 0 }}
               >
                 <BoardColumn
-                  key={status.id}
                   statusKey={status.key}
                   column={status.name}
                   count={
                     tasks.filter(
                       (task) =>
-                        task.estado === status.key ||
-                        task.estado === status.name,
+                        String(task.estado) === String(status.key) ||
+                        String(task.estado) === String(status.name),
                     ).length
                   }
                   Icon={getIconByStatus(status.key)}
                   color={status.color}
                   tasks={tasks.filter(
                     (task) =>
-                      task.estado === status.key || task.estado === status.name,
+                      String(task.estado) === String(status.key) ||
+                      String(task.estado) === String(status.name),
                   )}
                   openModal={handleAddTaskModal}
                   showAdd={
                     status.key === "pending" || status.key === "pendiente"
                   }
-                  className={`w-[85vw] md:w-auto shrink-0 snap-center first:ml-0 md:first:ml-0 `}
+                  onEditTask={(task) => setTaskToEdit(task)}
+                  onDeleteTask={(task) => setTaskToDelete(task)}
                 />
               </div>
             ))
         )}
       </section>
 
+      {/* MODALES */}
       <AddTaskModal
         showModal={showAddTaskModal}
         closeModal={handleAddTaskModal}
         projectId={projectId}
       />
+
+      {taskToEdit && (
+        <AddTaskModal
+          showModal={!!taskToEdit}
+          closeModal={() => setTaskToEdit(null)}
+          projectId={projectId}
+          taskToEdit={taskToEdit}
+        />
+      )}
+
+      {taskToDelete && (
+        <ConfirmDeletion
+          isOpen={!!taskToDelete}
+          onClose={() => setTaskToDelete(null)}
+          onSubmit={() => deleteTask(taskToDelete.id!)}
+          type="task"
+        />
+      )}
     </section>
   );
 }

@@ -22,6 +22,8 @@ interface BoardColumnProps {
   showAdd?: boolean;
   className?: string;
   style?: React.CSSProperties;
+  onEditTask: (task: Task) => void;
+  onDeleteTask: (task: Task) => void;
 }
 
 export function BoardColumn({
@@ -35,6 +37,8 @@ export function BoardColumn({
   openModal,
   showAdd,
   className,
+  onEditTask,
+  onDeleteTask,
 }: BoardColumnProps) {
   // Extraemos las funciones de movimiento del contexto
   const { moveTask, setIsDragging, draggedTaskId, setDraggedTaskId } =
@@ -89,64 +93,76 @@ export function BoardColumn({
       onDragEnter={handleDragEnter}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
-      className={`flex flex-col gap-5 bg-gray-100 rounded-2xl p-4 min-h-[500px] transition-all duration-300 border-2 ${
+      className={`flex flex-col gap-4 bg-gray-50/70 border border-gray-200/50 rounded-2xl p-3 md:p-4 min-h-[550px] transition-all duration-300 ${
         isOver
-          ? "bg-blue-50/40 border-blue-200 border-dashed scale-[1.01]"
-          : "bg-gray-50/50 border-transparent hover:bg-gray-50/80"
+          ? "bg-blue-50/60 border-blue-300 border-dashed scale-[1.02] shadow-xl shadow-blue-500/10"
+          : "hover:bg-gray-50/90 shadow-sm"
       } ${className}`}
     >
-      {/* Cabecera de la Columna (Rediseñada) */}
-      <header className="flex items-center justify-between pb-2 border-b border-gray-200/50">
+      {/* Cabecera de la Columna (Rediseñada - Sticky & Glass) */}
+      <header className="sticky top-0 z-10 flex items-center justify-between py-2 mb-1 backdrop-blur-md bg-white/20 rounded-lg">
         <div className="flex items-center gap-3">
-          {/* Icono con fondo sutil */}
+          {/* Icono con fondo sutil y aro dinámico */}
           <div
-            className="p-2 rounded-xl flex items-center justify-center"
+            className="size-10 rounded-xl flex items-center justify-center shadow-inner"
             style={{
-              backgroundColor: `${color}15`, // Color con 15% de opacidad
+              backgroundColor: `${color}15`,
               color: color,
+              border: `1.5px solid ${color}30`,
             }}
           >
             <Icon className="size-5" />
           </div>
 
           <div className="flex flex-col">
-            <h3 className="font-bold text-gray-800 text-sm tracking-tight capitalize">
+            <h3 className="font-bold text-gray-900 text-sm md:text-base leading-tight tracking-tight capitalize">
               {column.replace("_", " ")}
             </h3>
-            <p className="text-[10px] text-gray-400 font-medium uppercase tracking-widest">
-              {count} {count === 1 ? "Tarea" : "Tareas"}
-            </p>
+            <div className="flex items-center gap-2">
+              <span
+                className="size-2 rounded-full animate-pulse"
+                style={{ backgroundColor: color }}
+              />
+              <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">
+                {count} {count === 1 ? "Tarea" : "Tareas"}
+              </p>
+            </div>
           </div>
         </div>
 
-        {/* Botón rápido de añadir (Opcional en el header para que se vea más pro) */}
         {showAdd && (
           <button
             onClick={openModal}
-            className="p-1.5 rounded-lg text-gray-400 hover:bg-white hover:text-blue-500 hover:shadow-sm transition-all"
+            className="size-8 rounded-full flex items-center justify-center text-gray-400 hover:bg-white hover:text-blue-500 hover:shadow-lg shadow-gray-200 transition-all active:scale-90"
+            title="Añadir tarea"
           >
-            <Plus className="size-4" />
+            <Plus className="size-5" />
           </button>
         )}
       </header>
 
       {/* Listado de Tareas */}
-      <section className="flex flex-col gap-3 overflow-y-auto max-h-[calc(100vh-340px)] pr-1 custom-scrollbar">
+      <section className="flex flex-col gap-3.5 overflow-y-auto max-h-[calc(100vh-320px)] pr-2 custom-scrollbar">
         {tasks.length > 0 ? (
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-3.5 px-0.5 py-1">
             {tasks.map((task) => (
               <div key={task.id} className="task-card-anim">
-                <TaskCard {...task} />
+                <TaskCard
+                  {...task}
+                  onEdit={onEditTask}
+                  onDelete={onDeleteTask}
+                />
               </div>
             ))}
           </div>
         ) : (
-          <div className="flex flex-col items-center justify-center py-12 border-2 border-dashed border-gray-200/60 rounded-2xl bg-white/30">
-            <div className="p-3 bg-gray-100 rounded-full mb-2">
-              <Icon className="size-5 text-gray-300" />
+          <div className="flex flex-col items-center justify-center py-16 px-4 border-2 border-dashed border-gray-200 rounded-2xl bg-white/40 group/empty hover:border-blue-200 transition-colors">
+            <div className="size-14 bg-gray-50 rounded-full flex items-center justify-center mb-4 group-hover/empty:scale-110 transition-transform shadow-sm">
+              <Icon className="size-6 text-gray-300" />
             </div>
-            <p className="text-[11px] text-gray-400 font-medium">
-              Sin tareas pendientes
+            <h4 className="text-gray-900 text-xs font-bold mb-1">Sin tareas</h4>
+            <p className="text-[10px] text-gray-400 font-medium text-center">
+              Arrastra una tarea aquí o crea una nueva para comenzar.
             </p>
           </div>
         )}
@@ -154,9 +170,11 @@ export function BoardColumn({
         {showAdd && (
           <button
             onClick={openModal}
-            className="flex items-center justify-center gap-2 w-full py-3 mt-2 rounded-xl border-2 border-dashed border-gray-200 text-gray-400 hover:text-blue-600 hover:border-blue-200 hover:bg-white transition-all text-xs font-semibold group bg-transparent"
+            className="flex items-center justify-center gap-2 w-full py-4 mt-2 rounded-2xl border-2 border-dashed border-gray-200 text-gray-400 hover:text-blue-600 hover:border-blue-300 hover:bg-white hover:shadow-xl shadow-blue-500/5 transition-all text-[11px] font-bold uppercase tracking-wider group active:scale-[0.98]"
           >
-            <Plus className="size-3.5 group-hover:rotate-90 transition-transform duration-300" />
+            <div className="size-5 rounded-full bg-gray-50 flex items-center justify-center group-hover:bg-blue-50 transition-colors">
+              <Plus className="size-3 group-hover:rotate-90 transition-transform duration-300" />
+            </div>
             Nueva tarea
           </button>
         )}

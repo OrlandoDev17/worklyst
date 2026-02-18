@@ -6,7 +6,7 @@ import { useDebounce } from "@/hooks/useDebounce";
 // Contexts
 import { useUsers } from "@/contexts/UsersContext";
 // Types
-import type { User } from "@/lib/types";
+import type { User, ProjectMember } from "@/lib/types";
 // Icons
 import { Search, X, UserPlus, Loader2 } from "lucide-react";
 // Components
@@ -16,12 +16,7 @@ interface AddMemberModalProps {
   isOpen: boolean;
   onClose: () => void;
   onAddMember: (user: User) => Promise<boolean>;
-  currentMembers?: {
-    id: string;
-    nombre: string;
-    email: string;
-    rol: string;
-  }[];
+  currentMembers?: ProjectMember[];
 }
 
 export function AddMemberModal({
