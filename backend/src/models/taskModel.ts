@@ -7,6 +7,7 @@ export interface Task {
     assigned_to?: string;
     title: string;
     description?: string;
+    estado?: string;
     status_id: number;
     status_name?: string;
     status_color?: string;
@@ -127,6 +128,12 @@ export const actualizarTarea = async (id: string, datos: Partial<Task>) => {
         updates.push(`title = $${paramIndex++}`);
         values.push(datos.title);
     }
+
+    if (datos.estado) {
+        updates.push(`status = $${paramIndex++}`);
+        values.push(datos.estado)
+    }
+
     if (datos.description !== undefined) {
         updates.push(`description = $${paramIndex++}`);
         values.push(datos.description);
