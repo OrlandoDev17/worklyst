@@ -5,6 +5,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useDebounce } from "@/hooks/useDebounce";
 // Contexts
 import { useUsers } from "@/contexts/UsersContext";
+import { useAuth } from "@/contexts/AuthContext";
 // Types
 import type { User, ProjectMember } from "@/lib/types";
 // Icons
@@ -28,8 +29,10 @@ export function AddMemberModal({
   const [searchTerm, setSearchTerm] = useState("");
   const [addingId, setAddingId] = useState<string | null>(null);
 
-  const debouncedSearch = useDebounce(searchTerm, 500);
   const { searchUsers, userSearch, loading } = useUsers();
+  const { user: currentUser } = useAuth();
+
+  const debouncedSearch = useDebounce(searchTerm, 500);
 
   // Función auxiliar para normalizar texto (quitar acentos y minúsculas)
   const normalizeText = (text: string) =>
@@ -63,10 +66,10 @@ export function AddMemberModal({
         userNick.includes(query) ||
         userEmail.includes(query);
 
-      // No mostrar si ya es miembro
-      const isNotMember = !currentMembers.some((m) => m.id === user.id);
-
-      return matchesSearch && isNotMember;
+      // No mostrar si ya es miembro (excepto si es el usuario actual para indicar que es el creador/ya está)
+      // The filtering logic now includes users who are already members.
+      // The UI will handle disabling the add button for them.
+      return matchesSearch;
     });
   }, [userSearch, searchTerm, currentMembers]);
 
@@ -121,38 +124,60 @@ export function AddMemberModal({
           </div>
 
           <ul className="max-h-60 overflow-y-auto space-y-2 custom-scrollbar px-1">
-            {filteredResults.map((user) => (
-              <li key={user.id}>
-                <button
-                  disabled={!!addingId}
-                  onClick={async (e) => {
-                    e.preventDefault();
-                    setAddingId(user.id!);
-                    const success = await onAddMember(user);
-                    if (success) onClose();
-                    setAddingId(null);
-                  }}
-                  className={`w-full flex items-center gap-3 p-3 hover:bg-blue-50 rounded-xl group transition-all border border-transparent hover:border-blue-100 ${
-                    addingId ? "opacity-50 cursor-not-allowed" : ""
-                  }`}
-                >
-                  <MemberAvatar name={user.usuario} size="xl" />
-                  <div className="flex-1 text-left">
-                    <p className="font-semibold text-sm text-gray-800 group-hover:text-blue-700 truncate">
-                      {user.nombre || user.usuario}
-                    </p>
-                    <p className="text-xs text-gray-500 truncate">
-                      {user.email}
-                    </p>
-                  </div>
-                  {addingId === user.id ? (
-                    <Loader2 className="size-5 text-blue-600 animate-spin" />
-                  ) : (
-                    <UserPlus className="size-5 text-gray-300 group-hover:text-blue-600" />
-                  )}
-                </button>
-              </li>
-            ))}
+            {filteredResults.map((user) => {
+              const isCurrentUser = user.id === currentUser?.id;
+              const isAlreadyMember = currentMembers.some(
+                (m) => m.id === user.id,
+              );
+
+              return (
+                <li key={user.id}>
+                  <button
+                    disabled={!!addingId || isCurrentUser || isAlreadyMember}
+                    onClick={async (e) => {
+                      e.preventDefault();
+                      setAddingId(user.id!);
+                      const success = await onAddMember(user);
+                      if (success) onClose();
+                      setAddingId(null);
+                    }}
+                    className={`w-full flex items-center gap-3 p-3 hover:bg-blue-50 rounded-xl group transition-all border border-transparent hover:border-blue-100 ${
+                      addingId || isCurrentUser || isAlreadyMember
+                        ? "opacity-50 cursor-not-allowed"
+                        : ""
+                    }`}
+                  >
+                    <MemberAvatar name={user.usuario} size="xl" />
+                    <div className="flex-1 text-left">
+                      <p className="font-semibold text-sm text-gray-800 group-hover:text-blue-700 truncate">
+                        {user.nombre || user.usuario}{" "}
+                        {isCurrentUser && (
+                          <span className="text-[10px] text-blue-500">
+                            (Tú)
+                          </span>
+                        )}
+                      </p>
+                      <p className="text-xs text-gray-500 truncate">
+                        {user.email}
+                      </p>
+                    </div>
+                    {addingId === user.id ? (
+                      <Loader2 className="size-5 text-blue-600 animate-spin" />
+                    ) : isCurrentUser ? (
+                      <span className="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-md">
+                        CREADOR
+                      </span>
+                    ) : isAlreadyMember ? (
+                      <span className="text-[10px] font-bold text-gray-400 bg-gray-100 px-2 py-1 rounded-md">
+                        MIEMBRO
+                      </span>
+                    ) : (
+                      <UserPlus className="size-5 text-gray-300 group-hover:text-blue-600" />
+                    )}
+                  </button>
+                </li>
+              );
+            })}
 
             {/* Mensajes de estado */}
             {searchTerm.trim().length >= 3 &&

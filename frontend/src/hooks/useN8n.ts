@@ -25,7 +25,8 @@ export const useN8n = () => {
         };
 
         const response = await axios.post(
-          "https://n8n-production-fc0c.up.railway.app/webhook-test/worklyst-chat",
+          // "https://n8n-production-fc0c.up.railway.app/webhook-test/worklyst-chat",
+          "https://n8n-production-fc0c.up.railway.app/webhook/worklyst-chat",
           payload,
           {
             headers: {

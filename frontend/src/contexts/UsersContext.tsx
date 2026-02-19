@@ -21,7 +21,7 @@ export function UsersProvider({ children }: { children: React.ReactNode }) {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const { mounted, token } = useAuth();
+  const { mounted, token, user: currentUser, updateUserLocal } = useAuth();
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
   const APP_API_KEY = process.env.NEXT_PUBLIC_APP_API_KEY;
 
@@ -84,7 +84,7 @@ export function UsersProvider({ children }: { children: React.ReactNode }) {
   // == BUSCAR USUARIOS POR ID ==
 
   const fetchUserById = async (id: string) => {
-    if (!id || mounted) return;
+    if (!id) return;
 
     setLoading(true);
     setSelectedUser(null);
@@ -95,7 +95,6 @@ export function UsersProvider({ children }: { children: React.ReactNode }) {
         getHeaders(),
       );
       setSelectedUser(response.data);
-      console.log(selectedUser);
     } catch (error: any) {
       console.error("Error al buscar usuario", error.mensaje);
     } finally {
@@ -106,10 +105,9 @@ export function UsersProvider({ children }: { children: React.ReactNode }) {
   // == ACTUALIZAR DATOS DE USUARIO ==
 
   const updateUser = async (id: string, updates: Partial<User>) => {
-    if (!id || mounted) return;
+    if (!id) return;
 
     setLoading(true);
-    setSelectedUser(null);
 
     try {
       const response = await axios.put(
@@ -117,8 +115,14 @@ export function UsersProvider({ children }: { children: React.ReactNode }) {
         updates,
         getHeaders(),
       );
-      setSelectedUser(response.data);
-      console.log(selectedUser);
+
+      const updatedUser = response.data.usuario || response.data;
+
+      if (id === currentUser?.id) {
+        updateUserLocal(updatedUser);
+      }
+
+      setSelectedUser(updatedUser);
     } catch (error: any) {
       console.error("Error al actualizar usuario", error.mensaje);
     } finally {

@@ -80,26 +80,30 @@ export default function ProjectsPage() {
   }, [fetchProjects]);
 
   useEffect(() => {
-    // Solo animamos si ya no esta cargando y hay proyectos
-    if (!isLoading && projects.length > 0) {
-      gsap.fromTo(
-        ".project-card-anim",
-        {
-          opacity: 0,
-          y: 20,
-          scale: 0.95,
-        },
-        {
-          opacity: 1,
-          y: 0,
-          scale: 1,
-          duration: 0.6,
-          ease: "power3.out",
-          stagger: 0.1,
-        },
-      );
+    // Solo animamos si ya no esta cargando y hay proyectos en el DOM
+    if (!isLoading && projects.length > 0 && isDataReady) {
+      const cards = document.querySelectorAll(".project-card-anim");
+      if (cards.length > 0) {
+        gsap.fromTo(
+          cards,
+          {
+            opacity: 0,
+            y: 20,
+            scale: 0.95,
+          },
+          {
+            opacity: 1,
+            y: 0,
+            scale: 1,
+            duration: 0.8,
+            ease: "power4.out",
+            stagger: 0.08,
+            clearProps: "all", // Importante: limpiar estilos tras la animación para evitar conflictos
+          },
+        );
+      }
     }
-  }, [isLoading, projects.length]);
+  }, [isLoading, projects.length, isDataReady]);
 
   const welcomeMessage = useMemo(() => {
     if (!user?.nombre) return "Usuario";
@@ -184,13 +188,12 @@ export default function ProjectsPage() {
             })}
           </div>
           <ul
-            className={`grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 min-h-48 2xl:min-h-72 mt-4 2xl:mt-0 transition-opacity duration-500 ${isDataReady ? "opacity-100" : "opacity-0"}`}
+            className={`grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 min-h-48 2xl:min-h-72 mt-4 2xl:mt-0 transition-all duration-700 ${isDataReady ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}
           >
             {projects.map((project, index) => (
               <li
                 key={project?.id || `project-${index}`}
                 className="col-span-2 project-card-anim"
-                style={{ opacity: 0 }}
               >
                 <ProjectCard
                   {...project}
@@ -201,7 +204,7 @@ export default function ProjectsPage() {
                 />
               </li>
             ))}
-            <li className="col-span-2 project-card-anim" style={{ opacity: 0 }}>
+            <li className="col-span-2 project-card-anim">
               <CreateProjectCard onClick={handleShowModal} />
             </li>
           </ul>

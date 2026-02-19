@@ -3,6 +3,8 @@ import { useState } from "react";
 import { useGroups } from "@/contexts/GroupContext";
 import { Button } from "../common/Button";
 import { X } from "lucide-react";
+import { GlobalUserSearchInline } from "../common/GlobalUserSearchInline";
+import { User } from "@/lib/types";
 
 export function AddGroupModal({
   show,
@@ -13,6 +15,7 @@ export function AddGroupModal({
 }) {
   const { createGroup } = useGroups();
   const [loading, setLoading] = useState(false);
+  const [selectedMembers, setSelectedMembers] = useState<User[]>([]);
 
   if (!show) return null;
 
@@ -24,11 +27,23 @@ export function AddGroupModal({
     const success = await createGroup({
       nombre: formData.get("nombre") as string,
       descripcion: formData.get("descripcion") as string,
-      miembros: [], // Podrías integrar aquí tu UserSearchSelect
+      miembros: selectedMembers.map((m) => m.id!),
     });
 
-    if (success) onClose();
+    if (success) {
+      onClose();
+      setSelectedMembers([]);
+    }
     setLoading(false);
+  };
+
+  const handleAddMember = async (user: User) => {
+    setSelectedMembers((prev) => [...prev, user]);
+    return true;
+  };
+
+  const removeMember = (id: string) => {
+    setSelectedMembers((prev) => prev.filter((m) => m.id !== id));
   };
 
   return (
@@ -66,6 +81,33 @@ export function AddGroupModal({
               rows={3}
               placeholder="¿De qué trata este grupo?"
               className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-blue-500 transition-colors"
+            />
+          </div>
+
+          <div className="space-y-3">
+            <label className="block text-sm font-semibold text-gray-700">
+              Miembros
+            </label>
+
+            <div className="flex flex-wrap gap-2 mb-2">
+              {selectedMembers.map((m) => (
+                <div
+                  key={m.id}
+                  className="flex items-center gap-1.5 bg-blue-50 text-blue-600 px-2 py-1 rounded-lg text-xs border border-blue-100"
+                >
+                  <span className="truncate max-w-[100px]">
+                    {m.nombre || m.usuario}
+                  </span>
+                  <button type="button" onClick={() => removeMember(m.id!)}>
+                    <X className="size-3" />
+                  </button>
+                </div>
+              ))}
+            </div>
+
+            <GlobalUserSearchInline
+              onSelect={handleAddMember}
+              excludeIds={selectedMembers.map((m) => m.id!)}
             />
           </div>
 

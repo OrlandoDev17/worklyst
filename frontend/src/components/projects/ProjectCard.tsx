@@ -46,9 +46,8 @@ export function ProjectCard(props: ProjectCardProps) {
   } = props;
   const [showDropdown, setShowDropdown] = useState(false);
 
-  // No renderizar si faltan datos esenciales (miembros y al menos una tarea para calcular progreso)
-  if (!miembros || miembros.length === 0 || !totalTareas || totalTareas === 0)
-    return null;
+  // Renderizar siempre, incluso si no hay tareas (proyectos nuevos)
+  if (!nombre) return null;
 
   const formatDate = (dateString?: string) => {
     if (!dateString) return "No disponible";

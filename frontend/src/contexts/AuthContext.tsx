@@ -16,6 +16,7 @@ interface AuthContextType {
     error: string | null;
     success: boolean;
   };
+  updateUserLocal: (updates: Partial<User>) => void;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -145,6 +146,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const updateUserLocal = (updates: Partial<User>) => {
+    setUser((prev) => {
+      const updatedUser = prev ? { ...prev, ...updates } : null;
+      if (updatedUser) {
+        localStorage.setItem("usuario", JSON.stringify(updatedUser));
+      }
+      return updatedUser;
+    });
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -155,6 +166,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         token,
         mounted,
         states,
+        updateUserLocal,
       }}
     >
       {children}
