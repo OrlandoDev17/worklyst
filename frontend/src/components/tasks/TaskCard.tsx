@@ -11,18 +11,17 @@ import {
   Calendar,
 } from "lucide-react";
 import { Dropdown, DropdownItem } from "@/components/common/Dropdown";
-import { ConfirmDeletion } from "@/components/common/ConfirmDeletion";
 import { useTasks } from "@/contexts/TasksContext";
 import { useTaskStatuses } from "@/contexts/TaskStatusesContext";
 import { useProjects } from "@/contexts/ProjectsContext";
-import { AddTaskModal } from "./AddTaskModal";
 import { MemberAvatar } from "@/components/common/MemberAvatar";
 
-export function TaskCard(task: Task) {
-  const [showDropdown, setShowDropdown] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false);
+interface TaskCardProps extends Task {
+  onEdit: (task: Task) => void;
+  onDelete: (task: Task) => void;
+}
 
+export function TaskCard(props: TaskCardProps) {
   const {
     id,
     titulo,
@@ -31,9 +30,12 @@ export function TaskCard(task: Task) {
     asignado_a,
     fecha_limite,
     proyecto_id,
-  } = task;
+    onEdit,
+    onDelete,
+  } = props;
+  const [showDropdown, setShowDropdown] = useState(false);
 
-  const { deleteTask, updateTask, setIsDragging } = useTasks();
+  const { updateTask, setIsDragging, setDraggedTaskId } = useTasks();
   const { getStatusByKey, statuses } = useTaskStatuses();
   const { selectedProject } = useProjects();
 
@@ -59,6 +61,7 @@ export function TaskCard(task: Task) {
     e.dataTransfer.setData("taskId", id!);
     e.dataTransfer.effectAllowed = "move";
     setIsDragging(true);
+    setDraggedTaskId(id!);
   };
 
   const handleDragEnd = () => {
@@ -83,7 +86,7 @@ export function TaskCard(task: Task) {
       label: "Editar Tarea",
       icon: Pencil,
       onClick: () => {
-        setShowEditModal(true);
+        onEdit(props);
         setShowDropdown(false);
       },
     },
@@ -96,7 +99,7 @@ export function TaskCard(task: Task) {
       label: "Eliminar",
       icon: Trash2,
       onClick: () => {
-        setShowDeleteModal(true);
+        onDelete(props);
         setShowDropdown(false);
       },
       variant: "danger",
@@ -104,111 +107,106 @@ export function TaskCard(task: Task) {
   ];
 
   return (
-    <>
-      <article
-        draggable
-        onDragStart={handleDragStart}
-        onDragEnd={handleDragEnd}
-        className="flex flex-col gap-3 p-4 bg-white rounded-xl shadow-sm border border-gray-200 
-                   hover:shadow-md hover:border-blue-200 transition-all duration-200 group 
-                   cursor-grab active:cursor-grabbing"
-      >
-        <header className="flex items-start justify-between gap-2">
-          <h3 className="font-bold text-gray-800 text-sm leading-tight line-clamp-2">
-            {titulo}
-          </h3>
-          <div className="relative shrink-0">
-            <button
-              onClick={(e) => {
-                e.preventDefault();
-                setShowDropdown(!showDropdown);
-              }}
-              className="p-1 rounded-lg hover:bg-gray-100 text-gray-400 transition-colors"
-            >
-              <Ellipsis className="size-5" />
-            </button>
-            <Dropdown
-              isOpen={showDropdown}
-              onClose={() => setShowDropdown(false)}
-              items={items}
-            />
-          </div>
-        </header>
+    <article
+      draggable
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+      className="flex flex-col gap-3 p-3 md:p-4 bg-white rounded-2xl border border-gray-100 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.05)] 
+                 hover:shadow-[0_8px_24px_-8px_rgba(0,0,0,0.12)] hover:border-blue-200 hover:-translate-y-1 transition-all duration-300 group 
+                 cursor-grab active:cursor-grabbing relative overflow-hidden"
+    >
+      {/* Indicador lateral sutil */}
+      <div
+        className="absolute left-0 top-0 bottom-0 w-1 opacity-0 group-hover:opacity-100 transition-opacity"
+        style={{ backgroundColor: statusInfo?.color }}
+      />
 
-        <p className="text-xs text-gray-500 line-clamp-2 min-h-[32px]">
-          {descripcion || "Sin descripción adicional..."}
-        </p>
-
-        {/* Badge de Estado */}
-        <div className="flex">
-          <span
-            className="px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider border"
-            style={{
-              backgroundColor: `${statusInfo?.color}10`,
-              borderColor: `${statusInfo?.color}40`,
-              color: statusInfo?.color || "#6b7280",
+      <header className="flex items-start justify-between gap-2">
+        <h3 className="font-bold text-gray-800 text-[13px] md:text-sm leading-snug line-clamp-2 group-hover:text-blue-600 transition-colors">
+          {titulo}
+        </h3>
+        <div className="relative shrink-0">
+          <button
+            onClick={(e) => {
+              e.preventDefault();
+              setShowDropdown(!showDropdown);
             }}
+            className="p-1.5 rounded-lg hover:bg-gray-50 text-gray-400 hover:text-gray-600 transition-all"
           >
-            {statusInfo?.name || estado}
-          </span>
+            <Ellipsis className="size-4 md:size-5" />
+          </button>
+          <Dropdown
+            isOpen={showDropdown}
+            onClose={() => setShowDropdown(false)}
+            items={items}
+          />
+        </div>
+      </header>
+
+      <p className="text-[11px] md:text-xs text-gray-500 line-clamp-2 min-h-[32px] leading-relaxed">
+        {descripcion || "Sin descripción adicional..."}
+      </p>
+
+      {/* Badge de Estado & Metadata */}
+      <div className="flex items-center justify-between mt-1">
+        <span
+          className="px-2.5 py-1 rounded-lg text-[9px] md:text-[10px] font-bold uppercase tracking-widest border shadow-sm"
+          style={{
+            backgroundColor: `${statusInfo?.color}10`,
+            borderColor: `${statusInfo?.color}30`,
+            color: statusInfo?.color || "#6b7280",
+          }}
+        >
+          {statusInfo?.name || estado}
+        </span>
+
+        {/* Aquí se pueden añadir tags o prioridades en el futuro */}
+      </div>
+
+      <div className="h-px bg-linear-to-r from-transparent via-gray-100 to-transparent w-full my-1" />
+
+      <footer className="flex items-center justify-between">
+        {/* Usuario Asignado */}
+        <div className="flex items-center gap-2">
+          {assignedUser ? (
+            <div
+              className="flex items-center gap-2 p-0.5 pr-2 rounded-full bg-gray-50 group-hover:bg-blue-50 transition-colors border border-transparent group-hover:border-blue-100"
+              title={assignedUser.nombre}
+            >
+              <MemberAvatar
+                name={assignedUser.nombre}
+                size="sm"
+                className="size-6 text-[9px] shadow-sm border border-white"
+              />
+              <span className="text-[10px] md:text-[11px] font-bold text-gray-600 truncate max-w-[65px]">
+                {assignedUser.nombre?.split(" ")[0]}
+              </span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-1.5 text-gray-400 group-hover:text-blue-400 transition-colors">
+              <div className="size-6 rounded-full border border-dashed border-gray-300 flex items-center justify-center">
+                <UserPlus className="size-3" />
+              </div>
+              <span className="text-[9px] md:text-[10px] font-bold uppercase tracking-wider">
+                Asignar
+              </span>
+            </div>
+          )}
         </div>
 
-        <div className="h-px bg-gray-100 w-full my-1" />
-
-        <footer className="flex items-center justify-between">
-          {/* Usuario Asignado */}
-          <div className="flex items-center gap-2">
-            {assignedUser ? (
-              <div
-                className="flex items-center gap-1.5"
-                title={assignedUser.nombre}
-              >
-                <MemberAvatar
-                  name={assignedUser.nombre}
-                  size="sm"
-                  className="size-6 text-[9px] border border-white shadow-sm"
-                />
-                <span className="text-[11px] font-medium text-gray-600 truncate max-w-[70px]">
-                  {assignedUser.nombre?.split(" ")[0]}
-                </span>
-              </div>
-            ) : (
-              <div className="flex items-center gap-1 text-gray-400">
-                <UserPlus className="size-3.5" />
-                <span className="text-[10px] font-medium">Asignar</span>
-              </div>
-            )}
-          </div>
-
-          {/* Fecha Límite */}
-          <div
-            className={`flex items-center gap-1.5 px-2 py-1 rounded-md text-[10px] font-bold
-            ${estado === "completada" ? "bg-green-50 text-green-600" : "bg-gray-50 text-gray-500"}`}
-          >
-            <Calendar className="size-3" />
-            {formattedDate}
-          </div>
-        </footer>
-      </article>
-
-      {/* Modales */}
-      {showEditModal && (
-        <AddTaskModal
-          showModal={showEditModal}
-          closeModal={() => setShowEditModal(false)}
-          projectId={proyecto_id || ""}
-          taskToEdit={task}
-        />
-      )}
-
-      {showDeleteModal && (
-        <ConfirmDeletion
-          isOpen={showDeleteModal}
-          onClose={() => setShowDeleteModal(false)}
-          onSubmit={() => deleteTask(id!)}
-          type="task"
-        />
-      )}
-    </>
+        {/* Fecha Límite */}
+        <div
+          className={`flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-[9px] md:text-[10px] font-bold shadow-sm border
+          ${
+            estado === "completada"
+              ? "bg-green-50 text-green-600 border-green-100"
+              : "bg-gray-50 text-gray-500 border-gray-100"
+          }`}
+        >
+          <Calendar className="size-3" />
+          {formattedDate}
+        </div>
+      </footer>
+    </article>
   );
 }

@@ -25,7 +25,8 @@ export const useN8n = () => {
         };
 
         const response = await axios.post(
-          "https://n8n-production-fc0c.up.railway.app/webhook-test/worklyst-chat",
+          // "https://n8n-production-fc0c.up.railway.app/webhook-test/worklyst-chat",
+          "https://n8n-production-fc0c.up.railway.app/webhook/worklyst-chat",
           payload,
           {
             headers: {
@@ -40,13 +41,17 @@ export const useN8n = () => {
         // Ajusta esto según cómo configures el nodo de respuesta en n8n
         const data = response.data;
         console.log("Respuesta de n8n:", data);
+        if (data.refresh) {
+          // Disparamos un evento global sencillo
+          window.dispatchEvent(new Event("refresh_worklyst_data"));
+        }
 
         setMessages((prev) => [
           ...prev,
           {
             id: Date.now(),
             text:
-              data.output || data.response || "Acción completada con éxito.",
+              data.output || data.response || "No se pudo obtener respuesta.",
             user: "agent",
           },
         ]);

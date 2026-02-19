@@ -1,7 +1,7 @@
 "use client";
 
 // Hooks
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useLayoutEffect } from "react";
 import { useAnimations } from "@/hooks/useAnimations";
 // Componentes
 import Link from "next/link";
@@ -19,27 +19,29 @@ export default function Home() {
 
   const { animate } = useAnimations(container);
 
-  animate(() => {
-    animations.fadeUp(".hero-text", {
-      duration: 0.7,
-      delay: 0,
-      stagger: 0.2,
-      trigger: ".container",
+  useLayoutEffect(() => {
+    animate(() => {
+      animations.fadeUp(".hero-text", {
+        duration: 0.7,
+        delay: 0,
+        stagger: 0.2,
+        trigger: ".container",
+      });
+      animations.fadeLeft(".image");
+      animations.fadeUpScale(".feature-card", {
+        useScroll: true,
+        duration: 0.6,
+        stagger: 0.2,
+        trigger: ".feature-grid",
+      });
+      animations.fadeLeft(".cta", {
+        useScroll: true,
+        delay: 1,
+        stagger: 0.2,
+        trigger: ".cta-container",
+      });
     });
-    animations.fadeLeft(".image");
-    animations.fadeUpScale(".feature-card", {
-      useScroll: true,
-      duration: 0.6,
-      stagger: 0.2,
-      trigger: ".feature-grid",
-    });
-    animations.fadeLeft(".cta", {
-      useScroll: true,
-      delay: 1,
-      stagger: 0.2,
-      trigger: ".cta-container",
-    });
-  });
+  }, [animate]);
 
   return (
     <main className="max-w-11/12 2xl:max-w-10/12 mx-auto" ref={container}>

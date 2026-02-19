@@ -6,11 +6,13 @@ import { Button } from "@/components/common/Button";
 import { Plus, Users, ArrowRight, MoreVertical } from "lucide-react";
 import { MemberAvatar } from "@/components/common/MemberAvatar";
 import { AddGroupModal } from "@/components/community/AddGroupModal";
+import { EditGroupModal } from "@/components/community/EditGroupModal";
 import { Group } from "@/lib/types";
 
-export default function ComunidadPage() {
+export default function CommunityPage() {
   const { groups, fetchGroups, loading } = useGroups();
   const [showModal, setShowModal] = useState(false);
+  const [editingGroup, setEditingGroup] = useState<Group | null>(null);
 
   useEffect(() => {
     fetchGroups();
@@ -56,42 +58,85 @@ export default function ComunidadPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {groups.map((group: Group) => (
-            <GroupCard key={group.id} group={group} />
+            <GroupCard
+              key={group.id}
+              group={group}
+              onEdit={() => setEditingGroup(group)}
+            />
           ))}
         </div>
       )}
 
       <AddGroupModal show={showModal} onClose={() => setShowModal(false)} />
+      {editingGroup && (
+        <EditGroupModal
+          show={!!editingGroup}
+          onClose={() => setEditingGroup(null)}
+          group={editingGroup}
+        />
+      )}
     </main>
   );
 }
 
-function GroupCard({ group }: { group: Group }) {
+function GroupCard({ group, onEdit }: { group: Group; onEdit: () => void }) {
+  const maxVisibleMembers = 3;
+
   return (
-    <article className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow group">
-      <div className="flex justify-between items-start mb-4">
-        <div className="size-12 bg-blue-100 rounded-xl flex items-center justify-center text-blue-600">
+    <div className="group bg-white p-6 rounded-3xl border border-gray-100 shadow-sm hover:shadow-xl hover:border-blue-400 transition-all duration-300 flex flex-col h-full relative overflow-hidden">
+      {/* Glow Effect */}
+      <div className="absolute -right-8 -top-8 size-24 bg-blue-500/5 rounded-full blur-2xl group-hover:bg-blue-500/10 transition-colors" />
+
+      <div className="flex justify-between items-start mb-4 relative">
+        <div className="size-12 bg-blue-100 rounded-2xl flex items-center justify-center text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-all duration-300 shadow-sm">
           <Users className="size-6" />
         </div>
-        <button className="text-gray-400 hover:text-gray-600">
+        <button
+          onClick={onEdit}
+          className="text-gray-400 hover:text-blue-500 p-2 hover:bg-blue-50 rounded-xl transition-all"
+        >
           <MoreVertical className="size-5" />
         </button>
       </div>
 
-      <h3 className="text-lg font-bold text-gray-900 mb-1">{group.nombre}</h3>
-      <p className="text-sm text-gray-500 line-clamp-2 mb-6 h-10">
-        {group.descripcion}
+      <h3 className="text-lg font-bold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors truncate">
+        {group.nombre}
+      </h3>
+      <p className="text-sm text-gray-500 mb-6 line-clamp-2 leading-relaxed flex-1">
+        {group.descripcion ||
+          "Forma parte de esta comunidad y colabora con otros profesionales."}
       </p>
 
-      <footer className="flex items-center justify-between pt-4 border-t border-gray-50">
+      <div className="flex items-center justify-between pt-4 border-t border-gray-50 mt-auto">
+        {/* Avatares de Miembros */}
         <div className="flex -space-x-2">
-          {/* Aquí podrías mapear los avatares si el GET de la lista los incluyera */}
-          <MemberAvatar name={group.creador} size="sm" />
+          {group.miembros?.slice(0, maxVisibleMembers).map((member) => (
+            <div key={member.id} className="relative group/avatar">
+              <MemberAvatar
+                name={member.nombre}
+                className="size-8 ring-2 ring-white shadow-sm"
+              />
+            </div>
+          ))}
+          {group.miembros && group.miembros.length > maxVisibleMembers && (
+            <div className="size-8 rounded-full bg-blue-50 border-2 border-white flex items-center justify-center text-[10px] font-bold text-blue-600 shadow-sm">
+              +{group.miembros.length - maxVisibleMembers}
+            </div>
+          )}
+          {(!group.miembros || group.miembros.length === 0) && (
+            <span className="text-[10px] text-gray-400 font-medium">
+              Sin miembros
+            </span>
+          )}
         </div>
-        <button className="flex items-center gap-1 text-sm font-semibold text-blue-600 hover:gap-2 transition-all">
-          Ver detalles <ArrowRight className="size-4" />
-        </button>
-      </footer>
-    </article>
+
+        <div className="flex items-center gap-1.5 px-2.5 py-1 bg-blue-50/50 rounded-lg">
+          <Users className="size-3 text-blue-500" />
+          <span className="text-[10px] font-bold text-blue-700 uppercase tracking-wider">
+            {group.miembros?.length || 0} miemb.
+          </span>
+        </div>
+      </div>
+    </div>
   );
 }

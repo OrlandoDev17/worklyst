@@ -50,74 +50,186 @@ export function GroupsProvider({ children }: { children: React.ReactNode }) {
     setLoading(true);
     try {
       const response = await axios.get(`${API_URL}/api/groups`, getHeaders());
-      setGroups(response.data);
+      const basicGroups = response.data.grupos || response.data;
+
+      // Mostrar grupos básicos rápido
+      setGroups(basicGroups);
+
+      // Cargar detalles (miembros) en segundo plano para cada grupo
+      const detailedGroups = await Promise.all(
+        basicGroups.map(async (g: Group) => {
+          try {
+            const detailResponse = await axios.get(
+              `${API_URL}/api/groups/${g.id}`,
+              getHeaders(),
+            );
+            // El API puede devolver { grupo: { ... } } o el objeto directo
+            return detailResponse.data.grupo || detailResponse.data;
+          } catch (err) {
+            console.error(`Error al cargar detalles del grupo ${g.id}:`, err);
+            return g; // Retornar el básico si falla el detalle
+          }
+        }),
+      );
+
+      setGroups(detailedGroups);
     } catch (error) {
-      addToast("Error al cargar grupos", "error");
+      console.error("Error al cargar comunidades:", error);
+      addToast("Error al cargar las comunidades", "error");
     } finally {
       setLoading(false);
     }
   }, [API_URL, getHeaders, addToast]);
 
-  const createGroup = async (data: any) => {
-    try {
-      const response = await axios.post(
-        `${API_URL}/api/groups`,
-        data,
-        getHeaders(),
-      );
-      setGroups((prev) => [...prev, response.data.grupo]);
-      addToast("Comunidad creada con éxito", "success");
-      return true;
-    } catch (error) {
-      addToast("Error al crear la comunidad", "error");
-      return false;
-    }
-  };
+  const createGroup = useCallback(
+    async (data: any) => {
+      try {
+        const response = await axios.post(
+          `${API_URL}/api/groups`,
+          data,
+          getHeaders(),
+        );
+        // El API devuelve { grupo: { ... } } o el grupo directamente. Ajustamos.
+        const newGroup = response.data.grupo || response.data;
+        setGroups((prev) => [...prev, newGroup]);
+        addToast("Comunidad creada con éxito", "success");
+        return true;
+      } catch (error) {
+        addToast("Error al crear la comunidad", "error");
+        return false;
+      }
+    },
+    [API_URL, getHeaders, addToast],
+  );
 
-  const getGroupById = async (id: string) => {
-    setLoading(true);
-    try {
-      const response = await axios.get(
-        `${API_URL}/api/groups/${id}`,
-        getHeaders(),
-      );
-      setSelectedGroup(response.data);
-    } catch (error) {
-      addToast("No se pudo obtener la información del grupo", "error");
-    } finally {
-      setLoading(false);
-    }
-  };
+  const getGroupById = useCallback(
+    async (id: string) => {
+      setLoading(true);
+      try {
+        const response = await axios.get(
+          `${API_URL}/api/groups/${id}`,
+          getHeaders(),
+        );
+        setSelectedGroup(response.data);
+      } catch (error) {
+        addToast("No se pudo obtener la información del grupo", "error");
+      } finally {
+        setLoading(false);
+      }
+    },
+    [API_URL, getHeaders, addToast],
+  );
 
-  const deleteGroup = async (id: string) => {
-    try {
-      await axios.delete(`${API_URL}/api/groups/${id}`, getHeaders());
-      setGroups((prev) => prev.filter((g) => g.id !== id));
-      addToast("Comunidad eliminada", "info");
-      return true;
-    } catch (error) {
-      addToast("No se pudo eliminar el grupo", "error");
-      return false;
-    }
-  };
+  const deleteGroup = useCallback(
+    async (id: string) => {
+      try {
+        await axios.delete(`${API_URL}/api/groups/${id}`, getHeaders());
+        setGroups((prev) => prev.filter((g) => g.id !== id));
+        addToast("Comunidad eliminada", "info");
+        return true;
+      } catch (error) {
+        addToast("No se pudo eliminar el grupo", "error");
+        return false;
+      }
+    },
+    [API_URL, getHeaders, addToast],
+  );
 
-  const updateGroup = async (id: string, data: Partial<Group>) => {
-    try {
-      const response = await axios.put(
-        `${API_URL}/api/groups/${id}`,
-        data,
-        getHeaders(),
-      );
-      setGroups((prev) =>
-        prev.map((g) => (g.id === id ? response.data.grupo : g)),
-      );
-      addToast("Comunidad actualizada", "success");
-      return true;
-    } catch (error) {
-      addToast("No se pudo actualizar la comunidad", "error");
-      return false;
-    }
-  };
+  const updateGroup = useCallback(
+    async (id: string, data: Partial<Group>) => {
+      try {
+        const response = await axios.put(
+          `${API_URL}/api/groups/${id}`,
+          data,
+          getHeaders(),
+        );
+        // El API devuelve { grupo: { ... } } o el grupo directamente.
+        const updatedGroup = response.data.grupo || response.data;
+
+        setGroups((prev) => prev.map((g) => (g.id === id ? updatedGroup : g)));
+
+        if (selectedGroup?.id === id) {
+          setSelectedGroup(updatedGroup);
+        }
+
+        addToast("Comunidad actualizada", "success");
+        return true;
+      } catch (error) {
+        addToast("No se pudo actualizar la comunidad", "error");
+        return false;
+      }
+    },
+    [API_URL, getHeaders, addToast, selectedGroup],
+  );
+
+  const addMembers = useCallback(
+    async (groupId: string, userIds: string[]) => {
+      try {
+        await axios.post(
+          `${API_URL}/api/groups/${groupId}/members`,
+          { usuarios: userIds },
+          getHeaders(),
+        );
+
+        // Refrescamos la información del grupo para tener los miembros actualizados
+        const updatedGroupResp = await axios.get(
+          `${API_URL}/api/groups/${groupId}`,
+          getHeaders(),
+        );
+        const updatedGroup =
+          updatedGroupResp.data.grupo || updatedGroupResp.data;
+
+        setGroups((prev) =>
+          prev.map((g) => (g.id === groupId ? updatedGroup : g)),
+        );
+
+        if (selectedGroup?.id === groupId) {
+          setSelectedGroup(updatedGroup);
+        }
+
+        addToast("Miembros añadidos", "success");
+        return true;
+      } catch (error) {
+        addToast("Error al añadir miembros", "error");
+        return false;
+      }
+    },
+    [API_URL, getHeaders, addToast, selectedGroup],
+  );
+
+  const removeMember = useCallback(
+    async (groupId: string, userId: string) => {
+      try {
+        await axios.delete(
+          `${API_URL}/api/groups/${groupId}/members/${userId}`,
+          getHeaders(),
+        );
+
+        // Refrescamos la información del grupo para tener los miembros actualizados
+        const updatedGroupResp = await axios.get(
+          `${API_URL}/api/groups/${groupId}`,
+          getHeaders(),
+        );
+        const updatedGroup =
+          updatedGroupResp.data.grupo || updatedGroupResp.data;
+
+        setGroups((prev) =>
+          prev.map((g) => (g.id === groupId ? updatedGroup : g)),
+        );
+
+        if (selectedGroup?.id === groupId) {
+          setSelectedGroup(updatedGroup);
+        }
+
+        addToast("Miembro eliminado", "info");
+        return true;
+      } catch (error) {
+        addToast("Error al eliminar miembro", "error");
+        return false;
+      }
+    },
+    [API_URL, getHeaders, addToast, selectedGroup],
+  );
 
   return (
     <GroupsContext.Provider
@@ -130,8 +242,8 @@ export function GroupsProvider({ children }: { children: React.ReactNode }) {
         createGroup,
         getGroupById,
         deleteGroup,
-        addMembers: async () => true, // Implementar similar a miembros de proyecto
-        removeMember: async () => true,
+        addMembers,
+        removeMember,
       }}
     >
       {children}

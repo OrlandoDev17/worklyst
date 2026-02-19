@@ -31,11 +31,6 @@ export const NAVBAR_ITEMS: NavbarItem[] = [
     icon: Users,
   },
   {
-    label: "Dashboard",
-    href: "/dashboard",
-    icon: LayoutDashboard,
-  },
-  {
     label: "Configuración",
     href: "/user",
     icon: Settings,

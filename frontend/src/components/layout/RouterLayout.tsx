@@ -41,14 +41,14 @@ export default function RouterLayout({
                     {showHeader && <Header />}
                     {showSidebar && <Sidebar />}
                     <div
-                      className={`flex-1 ${showSidebar ? "ml-64 2xl:ml-72" : ""}`}
+                      className={`flex-1 ${showSidebar ? "md:ml-64 2xl:ml-72" : ""}`}
                     >
                       {children}
                     </div>
                     <ChatbotAgent />
                     {showFooter && (
                       <div
-                        className={`${showSidebar ? "ml-64 2xl:ml-72" : ""}`}
+                        className={`${showSidebar ? "md:ml-64 2xl:ml-72" : ""}`}
                       >
                         <Footer />
                       </div>

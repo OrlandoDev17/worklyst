@@ -6,10 +6,19 @@ import { useProjectModalAnimation } from "@/hooks/useProjectModalAnimation";
 import { useDebounce } from "@/hooks/useDebounce";
 // Context
 import { useUsers } from "@/contexts/UsersContext";
+import { useGroups } from "@/contexts/GroupContext";
 // Types
-import { Project, User } from "@/lib/types";
+import { Project, User, Group, GroupMember } from "@/lib/types";
 // Icons
-import { Plus, Search, X, UserPlus, Pencil, Loader2 } from "lucide-react";
+import {
+  Plus,
+  Search,
+  X,
+  UserPlus,
+  Pencil,
+  Loader2,
+  Users,
+} from "lucide-react";
 // Components
 import { ProjectInput } from "./ProjectInput";
 import { MemberAvatar } from "@/components/common/MemberAvatar";
@@ -38,11 +47,19 @@ export function CreateProjectModal({
   const [selectedMembers, setSelectedMembers] = useState<User[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const { searchUsers, userSearch, loading } = useUsers();
+  const { groups, fetchGroups } = useGroups();
+  const [showGroups, setShowGroups] = useState(false);
 
   const debouncedSearchTerm = useDebounce(searchTerm, 400);
 
   // ANIMACION
   useProjectModalAnimation(showModal, overlayRef, contentRef);
+
+  useEffect(() => {
+    if (showModal) {
+      fetchGroups();
+    }
+  }, [showModal, fetchGroups]);
 
   useEffect(() => {
     const query = debouncedSearchTerm.trim();
@@ -64,12 +81,27 @@ export function CreateProjectModal({
 
   // 2. Limpiar el estado al añadir un miembro
   const addMember = (user: User) => {
+    if (selectedMembers.some((m) => m.id === user.id)) return;
     setSelectedMembers((prev) => [...prev, user]);
     setSearchTerm(""); // Esto disparará el debounce a "" y detendrá el efecto
   };
 
   const removeMember = (userId: string) => {
     setSelectedMembers((prev) => prev.filter((m) => m.id !== userId));
+  };
+
+  const handleGroupSelect = (group: Group) => {
+    if (group.miembros) {
+      group.miembros.forEach((m) => {
+        addMember({
+          id: m.id,
+          nombre: m.nombre,
+          email: m.email,
+          usuario: m.nombre,
+        } as User);
+      });
+    }
+    setShowGroups(false);
   };
 
   const handleCreateProject = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -174,13 +206,55 @@ export function CreateProjectModal({
                     value={searchTerm}
                     onChange={handleInputChange}
                     placeholder="Buscar por nombre o email..."
-                    className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:border-blue-500 transition-all"
+                    className="w-full pl-10 pr-24 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:border-blue-500 transition-all"
                   />
 
-                  {/* Opcional: Mostrar un loader pequeño si está cargando */}
-                  {loading && searchTerm.length >= 3 && (
-                    <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                  <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                    {loading && searchTerm.length >= 3 && (
                       <Loader2 className="size-3 animate-spin text-gray-400" />
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => setShowGroups(!showGroups)}
+                      className="flex items-center gap-1 px-2 py-1 bg-white border border-gray-200 rounded-lg text-[10px] font-bold text-gray-600 hover:bg-gray-50 transition-colors shadow-sm"
+                    >
+                      <Users className="size-3" />
+                      Grupo
+                    </button>
+                  </div>
+
+                  {/* Dropdown de Grupos */}
+                  {showGroups && (
+                    <div className="absolute z-110 top-full mt-2 w-full bg-white border border-gray-100 rounded-xl shadow-2xl max-h-40 overflow-y-auto p-1">
+                      <p className="p-2 text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+                        Tus Comunidades
+                      </p>
+                      {groups.length === 0 ? (
+                        <p className="p-2 text-xs text-center text-gray-500">
+                          No tienes grupos creados
+                        </p>
+                      ) : (
+                        groups.map((group) => (
+                          <button
+                            key={group.id}
+                            type="button"
+                            onClick={() => handleGroupSelect(group)}
+                            className="w-full flex items-center justify-between p-2 hover:bg-blue-50 rounded-lg transition-colors text-left"
+                          >
+                            <div className="flex items-center gap-2">
+                              <div className="size-6 bg-blue-100 rounded-md flex items-center justify-center text-blue-600">
+                                <Users className="size-3" />
+                              </div>
+                              <span className="text-xs font-semibold">
+                                {group.nombre}
+                              </span>
+                            </div>
+                            <span className="text-[10px] text-gray-400">
+                              {group.miembros?.length || 0} miemb.
+                            </span>
+                          </button>
+                        ))
+                      )}
                     </div>
                   )}
                 </div>

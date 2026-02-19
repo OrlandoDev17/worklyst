@@ -1,7 +1,7 @@
 "use client";
 
 // Hooks
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useLayoutEffect } from "react";
 // Contexts
 import { useProjects } from "@/contexts/ProjectsContext";
 import { useTasks } from "@/contexts/TasksContext";
@@ -11,17 +11,42 @@ import { useTaskStatuses } from "@/contexts/TaskStatusesContext";
 import { Breadcrumbs } from "@/components/common/Breadcrumbs";
 import { MemberAvatar } from "@/components/common/MemberAvatar";
 import { Button } from "../common/Button";
-import { Plus, Loader2 } from "lucide-react";
+import { Plus } from "lucide-react";
 import { BoardColumn } from "./BoardColumn";
 import { AddTaskModal } from "./AddTaskModal";
+import { ConfirmDeletion } from "@/components/common/ConfirmDeletion";
+import { BoardColumnSkeleton } from "./skeleton/BoardColumnSkeleton";
+import { ProgressBar } from "@/components/common/ProggresBar";
+// Icons
+import { Circle, Clock, CheckCircle2 } from "lucide-react";
+// Gsap
+import gsap from "gsap";
+import { Task } from "@/lib/types";
 
 export function ProjectDetails({ projectId }: { projectId: string }) {
   const [showAddTaskModal, setShowAddTaskModal] = useState(false);
+  const [taskToEdit, setTaskToEdit] = useState<Task | null>(null);
+  const [taskToDelete, setTaskToDelete] = useState<Task | null>(null);
 
   const { mounted, user } = useAuth();
   const { getProjectById, selectedProject, states } = useProjects();
-  const { fetchTasks, tasks, loading: tasksLoading } = useTasks();
+  const {
+    fetchTasks,
+    tasks,
+    loading: tasksLoading,
+    isDragging,
+    deleteTask,
+  } = useTasks();
   const { statuses, loading: statusesLoading } = useTaskStatuses();
+
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  const isProjectLoading = states.loading && !selectedProject;
+  const isInitialTaskLoad = tasksLoading && tasks.length === 0;
+  const isStatusesLoading = statusesLoading && statuses.length === 0;
+
+  // Decidimos que parte esta cargando
+  const showBoardSkeleton = isInitialTaskLoad || isStatusesLoading;
 
   useEffect(() => {
     if (mounted && user) {
@@ -30,8 +55,71 @@ export function ProjectDetails({ projectId }: { projectId: string }) {
     }
   }, [projectId, getProjectById, fetchTasks, mounted, user]);
 
+  // Animaciones de entrada
+  useLayoutEffect(() => {
+    if (!showBoardSkeleton && selectedProject) {
+      const ctx = gsap.context(() => {
+        const tl = gsap.timeline();
+
+        // 1. Animamos el header
+        tl.fromTo(
+          ".header-anim",
+          { opacity: 0, y: 20 },
+          { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" },
+        );
+
+        // 2. Animamos las Columnas del tablero con un pequeño delay
+        tl.fromTo(
+          ".column-anim",
+          { opacity: 0, y: 30, scale: 0.98 },
+          {
+            opacity: 1,
+            y: 0,
+            scale: 1,
+            duration: 0.6,
+            ease: "back.out(1.2)",
+            stagger: 0.15,
+          },
+          "-=0.3", // Empezar un poco antes de que termine la anterior
+        );
+      });
+
+      return () => ctx.revert();
+    }
+  }, [showBoardSkeleton, selectedProject]);
+
   // RECUPERAR TODOS LOS DATOS DEL PROYECTO
   const { nombre, descripcion, miembros } = selectedProject || {};
+
+  // Calcular progreso dinámico basado en los mismos criterios que el tablero
+  const totalTasks = tasks.length;
+
+  const completedStatus = statuses.find(
+    (s) =>
+      ["completada", "completed", "completado"].includes(
+        (s.key || "").toLowerCase(),
+      ) ||
+      ["completada", "completed", "completado"].includes(
+        (s.name || "").toLowerCase(),
+      ),
+  );
+
+  const completedTasks = tasks.filter((t) => {
+    if (!t.estado) return false;
+    const estadoStr = String(t.estado).toLowerCase().trim();
+    const completedKey = (completedStatus?.key || "___none___")
+      .toLowerCase()
+      .trim();
+    const completedName = (completedStatus?.name || "___none___")
+      .toLowerCase()
+      .trim();
+
+    return (
+      estadoStr === completedKey ||
+      estadoStr === completedName ||
+      ["completada", "completed", "completado", "terminada"].includes(estadoStr)
+    );
+  }).length;
 
   const breadcrumbsItems = [
     { label: "Inicio", href: "/" },
@@ -43,99 +131,197 @@ export function ProjectDetails({ projectId }: { projectId: string }) {
     setShowAddTaskModal(!showAddTaskModal);
   };
 
-  // Loading states
-  const isProjectLoading = states.loading && !selectedProject;
-  const isInitialTaskLoad = tasksLoading && tasks.length === 0;
-  const isStatusesLoading = statusesLoading && statuses.length === 0;
-  const isLoading = isProjectLoading || isInitialTaskLoad || isStatusesLoading;
+  // --- LÓGICA DE AUTO-SCROLL AL ARRASTRAR ---
+  const handleDragOverContainer = (e: React.DragEvent) => {
+    const container = scrollContainerRef.current;
+    if (!container || !isDragging) return;
 
-  // Show loader while data is being fetched
-  if (isLoading) {
-    return (
-      <div className="flex h-[80vh] w-full items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <Loader2 className="h-12 w-12 animate-spin text-blue-500" />
-          <p className="text-gray-500 font-medium">
-            {isProjectLoading
-              ? "Cargando proyecto..."
-              : isStatusesLoading
-                ? "Cargando estados..."
-                : "Cargando tareas..."}
-          </p>
-        </div>
-      </div>
-    );
-  }
+    const { clientX } = e;
+    const { left, width } = container.getBoundingClientRect();
+    const edgeSize = 100; // Aumentado para mejor respuesta en bordes
+    const scrollSpeed = 15; // Velocidad de scroll incrementada
 
-  // Show error if project not found
-  if (!selectedProject) {
-    return (
-      <div className="flex items-center justify-center min-h-[50vh]">
-        <p className="text-gray-500">No se encontró el proyecto.</p>
-      </div>
-    );
-  }
+    if (clientX - left < edgeSize) {
+      container.scrollLeft -= scrollSpeed;
+    } else if (left + width - clientX < edgeSize) {
+      container.scrollLeft += scrollSpeed;
+    }
+  };
+
+  const getIconByStatus = (key: string) => {
+    switch (key) {
+      case "pendiente":
+      case "pending":
+        return Circle;
+      case "en_progreso":
+      case "in_progress":
+        return Clock;
+      case "completada":
+      case "completed":
+        return CheckCircle2;
+      default:
+        return Circle;
+    }
+  };
 
   return (
-    <section className="flex flex-col gap-4 2xl:gap-8">
-      <Breadcrumbs items={breadcrumbsItems} />
-      <header className="flex items-center justify-between border-b-2 border-gray-200 pb-6">
-        <div className="flex flex-col gap-2">
-          <h1 className="text-2xl 2xl:text-3xl font-bold max-w-xl">{nombre}</h1>
-          <p className="text-gray-500 text-sm 2xl:text-base max-w-xl">
-            {descripcion}
-          </p>
+    <section className="flex flex-col gap-6 2xl:gap-8 pb-10">
+      <div className="px-4 md:px-0">
+        <Breadcrumbs items={breadcrumbsItems} />
+      </div>
+
+      <header className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 md:gap-4 px-4 md:px-0 border-b-2 border-gray-100 pb-8 relative group">
+        <div
+          className={`flex flex-col gap-3 flex-1 ${!showBoardSkeleton ? "header-anim" : ""}`}
+          style={{ opacity: showBoardSkeleton ? 1 : 0 }}
+        >
+          <div className="flex items-center gap-3">
+            <h1 className="text-3xl md:text-4xl 2xl:text-5xl font-black text-gray-900 tracking-tight transition-all">
+              {nombre || (
+                <div className="h-10 w-64 bg-gray-200 rounded-xl animate-pulse" />
+              )}
+            </h1>
+            <div className="hidden md:block">
+              <span className="px-3 py-1 rounded-full bg-blue-50 text-blue-600 text-[10px] font-black uppercase tracking-widest border border-blue-100 shadow-sm">
+                Proyecto Activo
+              </span>
+            </div>
+          </div>
+
+          <div className="text-gray-500 text-sm 2xl:text-lg max-w-2xl leading-relaxed">
+            {descripcion || (
+              <div className="flex flex-col gap-2 mt-2">
+                <div className="h-4 w-full bg-gray-100 rounded-lg animate-pulse" />
+                <div className="h-4 w-2/3 bg-gray-100 rounded-lg animate-pulse" />
+              </div>
+            )}
+          </div>
+
+          {!showBoardSkeleton && totalTasks > 0 && (
+            <div className="max-w-md w-full mt-4">
+              <ProgressBar
+                totalTasks={totalTasks}
+                completedTasks={completedTasks}
+              />
+            </div>
+          )}
         </div>
-        <div className="flex items-center gap-6">
-          <ul className="flex items-center border-r border-gray-200 pr-4">
-            {miembros?.map(({ id, nombre }) => (
-              <li key={id} className="-ml-2">
-                <MemberAvatar name={nombre} />
-              </li>
-            ))}
+
+        <div className="flex flex-col sm:flex-row items-center gap-6 w-full md:w-auto">
+          <ul className="flex items-center border-0 md:border-r border-gray-100 pr-6">
+            {miembros ? (
+              miembros.map(({ id, nombre }) => (
+                <li key={id} className="-ml-3 first:ml-0 relative group/avatar">
+                  <MemberAvatar
+                    name={nombre}
+                    className="ring-4 ring-white shadow-md hover:ring-blue-400 hover:-translate-y-1 transition-all"
+                  />
+                </li>
+              ))
+            ) : (
+              <div className="flex items-center -space-x-3 animate-pulse">
+                {[1, 2, 3].map((i) => (
+                  <div
+                    key={i}
+                    className="size-11 rounded-full bg-gray-200 border-4 border-white"
+                  />
+                ))}
+              </div>
+            )}
           </ul>
-          <Button onClick={handleAddTaskModal}>
-            <Plus />
-            Nueva Tarea
+          <Button
+            onClick={handleAddTaskModal}
+            disabled={showBoardSkeleton}
+            className="w-full sm:w-auto shadow-xl shadow-blue-500/20 hover:shadow-blue-500/40 transition-shadow active:scale-95"
+          >
+            <Plus className="size-5" />
+            <span className="font-bold">Nueva Tarea</span>
           </Button>
         </div>
       </header>
-      <section className="grid grid-cols-3 gap-6 min-h-[calc(100vh-280px)]">
-        {statuses
-          .filter((status) => status.key !== "overdue")
-          .map((status) => (
-            <BoardColumn
-              key={status.id}
-              statusKey={status.key}
-              column={status.name}
-              count={
-                tasks.filter(
-                  (task) =>
-                    task.estado === status.key || task.estado === status.name,
-                ).length
-              }
-              Icon={({ className }) => (
-                <div
-                  className={`rounded-full ${className}`}
-                  style={{ backgroundColor: status.color }}
+
+      {/* ÁREA DEL TABLERO - Glassmorphism & Patterns */}
+      <section
+        ref={scrollContainerRef}
+        onDragOver={handleDragOverContainer}
+        className={`relative flex md:grid md:grid-cols-3 gap-6 md:gap-8 min-h-[calc(100vh-320px)] overflow-x-auto pb-12 px-4 md:px-0 -mx-4 md:mx-0 scrollbar-hide transition-all duration-300 ${
+          isDragging ? "bg-blue-50/20 cursor-grabbing" : "snap-x snap-mandatory"
+        }`}
+      >
+        {/* Background Pattern Sutil */}
+        <div
+          className="absolute inset-0 opacity-[0.03] pointer-events-none"
+          style={{
+            backgroundImage:
+              "radial-gradient(circle at 2px 2px, #3b82f6 1px, transparent 0)",
+            backgroundSize: "32px 32px",
+          }}
+        />
+
+        {showBoardSkeleton ? (
+          <BoardColumnSkeleton />
+        ) : (
+          statuses
+            .filter((status) => status.key !== "overdue")
+            .map((status) => (
+              <div
+                key={status.id}
+                className="column-anim shrink-0 w-[85vw] md:w-auto snap-center first:pl-2 first:md:pl-0 last:pr-4 last:md:pr-0"
+                style={{ opacity: 0 }}
+              >
+                <BoardColumn
+                  statusKey={status.key}
+                  column={status.name}
+                  count={
+                    tasks.filter(
+                      (task) =>
+                        String(task.estado) === String(status.key) ||
+                        String(task.estado) === String(status.name),
+                    ).length
+                  }
+                  Icon={getIconByStatus(status.key)}
+                  color={status.color}
+                  tasks={tasks.filter(
+                    (task) =>
+                      String(task.estado) === String(status.key) ||
+                      String(task.estado) === String(status.name),
+                  )}
+                  openModal={handleAddTaskModal}
+                  showAdd={
+                    status.key === "pending" || status.key === "pendiente"
+                  }
+                  onEditTask={(task) => setTaskToEdit(task)}
+                  onDeleteTask={(task) => setTaskToDelete(task)}
                 />
-              )}
-              color={status.color}
-              tasks={tasks.filter(
-                (task) =>
-                  task.estado === status.key || task.estado === status.name,
-              )}
-              openModal={handleAddTaskModal}
-              showAdd={status.key === "pending" || status.key === "pendiente"}
-            />
-          ))}
+              </div>
+            ))
+        )}
       </section>
 
+      {/* MODALES */}
       <AddTaskModal
         showModal={showAddTaskModal}
         closeModal={handleAddTaskModal}
         projectId={projectId}
       />
+
+      {taskToEdit && (
+        <AddTaskModal
+          showModal={!!taskToEdit}
+          closeModal={() => setTaskToEdit(null)}
+          projectId={projectId}
+          taskToEdit={taskToEdit}
+        />
+      )}
+
+      {taskToDelete && (
+        <ConfirmDeletion
+          isOpen={!!taskToDelete}
+          onClose={() => setTaskToDelete(null)}
+          onSubmit={() => deleteTask(taskToDelete.id!)}
+          type="task"
+        />
+      )}
     </section>
   );
 }

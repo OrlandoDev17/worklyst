@@ -9,7 +9,7 @@ import Link from "next/link";
 // Context
 import { useAuth } from "@/contexts/AuthContext";
 // Hooks
-import { useState, useRef } from "react";
+import { useState, useRef, useLayoutEffect } from "react";
 // Animaciones
 import { animations } from "@/lib/animations";
 import { useAnimations } from "@/hooks/useAnimations";
@@ -26,11 +26,13 @@ export default function RegisterPage() {
   const containerRef = useRef<HTMLElement>(null);
   const { animate } = useAnimations(containerRef);
 
-  animate(() => {
-    animations.fadeUp(".register", {
-      ease: "back.out(1.8)",
+  useLayoutEffect(() => {
+    animate(() => {
+      animations.fadeUp(".register", {
+        ease: "back.out(1.8)",
+      });
     });
-  });
+  }, [animate]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
