@@ -17,6 +17,7 @@ interface MobileMenuProps {
   NavbarItems: NavbarItem[];
   showAuthButtons: boolean;
   user: User | null;
+  logout: () => Promise<void>;
 }
 
 export function MobileMenu({
@@ -25,6 +26,7 @@ export function MobileMenu({
   setIsOpen,
   NavbarItems,
   showAuthButtons,
+  logout,
 }: MobileMenuProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const { animate, gsap } = useAnimations(containerRef);
@@ -84,12 +86,25 @@ export function MobileMenu({
           </div>
         </>
       ) : (
-        <div className="flex items-center gap-2 bg-gray-200 rounded-lg p-2">
-          <MemberAvatar name={user?.nombre} />
-          <div className="flex flex-col">
-            <p className="text-sm font-medium">{user?.nombre}</p>
-            <p className="text-xs text-gray-500">{user?.email}</p>
+        <div className="flex flex-col gap-4">
+          <div className="flex items-center gap-3 bg-gray-50 rounded-2xl p-4 border border-gray-100">
+            <MemberAvatar name={user?.nombre} />
+            <div className="flex flex-col min-w-0">
+              <p className="text-sm font-bold text-gray-900 truncate">
+                {user?.nombre}
+              </p>
+              <p className="text-xs text-gray-500 truncate">{user?.email}</p>
+            </div>
           </div>
+          <button
+            onClick={async () => {
+              await logout();
+              setIsOpen(false);
+            }}
+            className="w-full text-center px-5 py-3 rounded-lg bg-red-50 text-red-600 font-bold hover:bg-red-100 transition shadow-sm border border-red-100"
+          >
+            Cerrar Sesión
+          </button>
         </div>
       )}
     </div>
