@@ -40,6 +40,7 @@ export function ProjectDetails({ projectId }: { projectId: string }) {
   const { statuses, loading: statusesLoading } = useTaskStatuses();
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const initializedRef = useRef<string | null>(null);
 
   const isProjectLoading = states.loading && !selectedProject;
   const isInitialTaskLoad = tasksLoading && tasks.length === 0;
@@ -49,15 +50,32 @@ export function ProjectDetails({ projectId }: { projectId: string }) {
   const showBoardSkeleton = isInitialTaskLoad || isStatusesLoading;
 
   useEffect(() => {
-    if (mounted && user) {
+    // Solo cargamos si tenemos montado el componente, el usuario y no hemos cargado este projectId ya
+    if (mounted && user && initializedRef.current !== projectId) {
       getProjectById(projectId);
       fetchTasks(projectId);
+      initializedRef.current = projectId;
     }
-  }, [projectId, getProjectById, fetchTasks, mounted, user]);
+  }, [projectId, mounted, user, getProjectById, fetchTasks]);
+
+  // Listener para refresco global (ej: desde el chatbot)
+  useEffect(() => {
+    const handleRefresh = () => {
+      if (mounted && user && projectId) {
+        getProjectById(projectId);
+        fetchTasks(projectId);
+      }
+    };
+
+    window.addEventListener("refresh_worklyst_data", handleRefresh);
+    return () =>
+      window.removeEventListener("refresh_worklyst_data", handleRefresh);
+  }, [mounted, user, projectId, getProjectById, fetchTasks]);
 
   // Animaciones de entrada
   useLayoutEffect(() => {
-    if (!showBoardSkeleton && selectedProject) {
+    // Solo animamos una vez cuando los datos están listos y no se ve el skeleton
+    if (!showBoardSkeleton && selectedProject && tasks.length >= 0) {
       const ctx = gsap.context(() => {
         const tl = gsap.timeline();
 

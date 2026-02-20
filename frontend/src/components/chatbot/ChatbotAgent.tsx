@@ -62,11 +62,7 @@ export function ChatbotAgent() {
     setInputValue("");
     setIsLoading(true);
 
-    const responseData = await callN8nAgent(inputValue);
-
-    if (responseData?.actionExecuted === "project_created") {
-      await fetchProjects();
-    }
+    await callN8nAgent(inputValue);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {

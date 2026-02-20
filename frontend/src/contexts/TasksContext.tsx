@@ -97,7 +97,7 @@ export function TasksProvider({ children }: { children: React.ReactNode }) {
         setLoading(false);
       }
     },
-    [API_URL, getAuthHeaders, addToast], // Eliminamos fetchTasks de las dependencias
+    [API_URL, getAuthHeaders, addToast, fetchTasks],
   );
 
   // --- ACTUALIZAR / MOVER TAREA (PUT) ---
@@ -127,13 +127,18 @@ export function TasksProvider({ children }: { children: React.ReactNode }) {
           fecha_limite: updates.fecha_limite ?? taskToUpdate.fecha_limite,
         };
 
-        console.log("🚀 Enviando PUT al backend:", fullPayload);
-
         await axios.put(
           `${API_URL}/api/tasks/${taskId}`,
           fullPayload,
           getAuthHeaders(),
         );
+
+        addToast("Tarea actualizada correctamente", "success");
+        // Forzamos recarga para asegurar sincronización con la DB
+        const currentTask = tasks.find((t) => t.id === taskId);
+        if (currentTask?.proyecto_id) {
+          await fetchTasks(currentTask.proyecto_id);
+        }
 
         return true;
       } catch (error: any) {
@@ -148,7 +153,7 @@ export function TasksProvider({ children }: { children: React.ReactNode }) {
         return false;
       }
     },
-    [API_URL, tasks, getAuthHeaders, addToast], // Es vital que 'tasks' esté aquí para encontrar taskToUpdate
+    [API_URL, tasks, getAuthHeaders, addToast, fetchTasks], // Es vital que 'tasks' esté aquí para encontrar taskToUpdate
   );
 
   // Asegúrate de que moveTask también sea async y espere a updateTask
@@ -162,17 +167,26 @@ export function TasksProvider({ children }: { children: React.ReactNode }) {
   // --- ELIMINAR TAREA (DELETE) ---
   const deleteTask = useCallback(
     async (taskId: string) => {
+      // Guardamos el proyecto_id para recargar después
+      const taskToDelete = tasks.find((t) => t.id === taskId);
+      const projectId = taskToDelete?.proyecto_id;
+
       try {
         await axios.delete(`${API_URL}/api/tasks/${taskId}`, getAuthHeaders());
         setTasks((prev) => prev.filter((t) => t.id !== taskId));
         addToast("Tarea eliminada correctamente", "success");
+
+        if (projectId) {
+          await fetchTasks(projectId);
+        }
+
         return true;
       } catch (error) {
         addToast("No se pudo eliminar la tarea", "error");
         return false;
       }
     },
-    [API_URL, APP_API_KEY, getAuthHeaders, addToast],
+    [API_URL, getAuthHeaders, addToast, fetchTasks, tasks],
   );
 
   // --- ASIGNAR TAREA (PATCH) ---

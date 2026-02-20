@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Poppins } from "next/font/google";
 import "./globals.css";
 import Layout from "@/components/layout/RouterLayout";
+import { ProtectedRoute } from "@/components/layout/ProtectedRoute";
 
 const poppins = Poppins({
   weight: ["400", "500", "600", "700"],
@@ -24,7 +25,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${poppins.className} antialiased`}>
-        <Layout>{children}</Layout>
+        <Layout>
+          <ProtectedRoute>{children}</ProtectedRoute>
+        </Layout>
       </body>
     </html>
   );

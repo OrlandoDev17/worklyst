@@ -29,6 +29,10 @@ export default function RouterLayout({
     pathname !== "/" && pathname !== "/login" && pathname !== "/register";
   const showFooter = pathname !== "/login" && pathname !== "/register";
 
+  // Mostrar chatbot solo en proyectos y tareas (según requerimiento)
+  const showChatbot =
+    pathname.startsWith("/projects") || pathname.startsWith("/tasks");
+
   return (
     <ToastProvider>
       <AuthProvider>
@@ -45,7 +49,7 @@ export default function RouterLayout({
                     >
                       {children}
                     </div>
-                    <ChatbotAgent />
+                    {showChatbot && <ChatbotAgent />}
                     {showFooter && (
                       <div
                         className={`${showSidebar ? "md:ml-64 2xl:ml-72" : ""}`}

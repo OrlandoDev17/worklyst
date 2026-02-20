@@ -52,32 +52,21 @@ export default function ProjectsPage() {
   const isLoading = states.loading && !isDataReady;
 
   useEffect(() => {
-    async function loadData() {
+    async function handleDataLoad() {
       if (mounted && user) {
         await fetchProjects();
-
         setIsDataReady(true);
       }
     }
 
-    loadData();
-  }, [mounted, user, fetchProjects]);
+    // Carga inicial
+    handleDataLoad();
 
-  useEffect(() => {
-    async function handleRefreshData() {
-      if (mounted && user) {
-        await fetchProjects();
-
-        setIsDataReady(true);
-      }
-    }
-
-    handleRefreshData();
-
-    window.addEventListener("refresh_worklyst_data", handleRefreshData);
+    // Listener para refresco global
+    window.addEventListener("refresh_worklyst_data", handleDataLoad);
     return () =>
-      window.removeEventListener("refresh_worklyst_data", handleRefreshData);
-  }, [fetchProjects]);
+      window.removeEventListener("refresh_worklyst_data", handleDataLoad);
+  }, [mounted, user, fetchProjects]);
 
   useEffect(() => {
     // Solo animamos si ya no esta cargando y hay proyectos en el DOM

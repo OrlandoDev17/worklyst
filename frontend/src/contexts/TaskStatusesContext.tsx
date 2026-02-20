@@ -52,7 +52,6 @@ export function TaskStatusesProvider({
         `${API_URL}/api/task-statuses`,
         getAuthHeaders(),
       );
-      console.log("Task statuses fetched:", response.data);
       setStatuses(response.data);
     } catch (error: any) {
       console.error("Error al cargar estados de tareas:", error);
