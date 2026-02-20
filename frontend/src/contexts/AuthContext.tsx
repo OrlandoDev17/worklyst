@@ -35,8 +35,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const { addToast } = useToast();
 
-  const API_URL = process.env.NEXT_PUBLIC_API_URL;
-  const APP_API_KEY = process.env.NEXT_PUBLIC_APP_API_KEY;
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || "";
+  const APP_API_KEY = process.env.NEXT_PUBLIC_APP_API_KEY || "";
 
   useEffect(() => {
     const initializeAuth = () => {

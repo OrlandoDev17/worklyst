@@ -27,6 +27,7 @@ export function ProjectDetails({ projectId }: { projectId: string }) {
   const [showAddTaskModal, setShowAddTaskModal] = useState(false);
   const [taskToEdit, setTaskToEdit] = useState<Task | null>(null);
   const [taskToDelete, setTaskToDelete] = useState<Task | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const { mounted, user } = useAuth();
   const { getProjectById, selectedProject, states } = useProjects();
@@ -47,7 +48,8 @@ export function ProjectDetails({ projectId }: { projectId: string }) {
   const isStatusesLoading = statusesLoading && statuses.length === 0;
 
   // Decidimos que parte esta cargando
-  const showBoardSkeleton = isInitialTaskLoad || isStatusesLoading;
+  const showBoardSkeleton =
+    isInitialTaskLoad || isStatusesLoading || isRefreshing;
 
   useEffect(() => {
     // Solo cargamos si tenemos montado el componente, el usuario y no hemos cargado este projectId ya
@@ -60,10 +62,11 @@ export function ProjectDetails({ projectId }: { projectId: string }) {
 
   // Listener para refresco global (ej: desde el chatbot)
   useEffect(() => {
-    const handleRefresh = () => {
+    const handleRefresh = async () => {
       if (mounted && user && projectId) {
-        getProjectById(projectId);
-        fetchTasks(projectId);
+        setIsRefreshing(true);
+        await Promise.all([getProjectById(projectId), fetchTasks(projectId)]);
+        setIsRefreshing(false);
       }
     };
 

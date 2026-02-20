@@ -21,21 +21,18 @@ export const useN8n = () => {
           message: query,
           history: messages.slice(-5), // Contexto de la conversación
           userId: user?.id,
-          userName: user?.nombre || user?.usuario, // Útil para que la IA te salude
+          userName: user?.nombre || user?.usuario || "Usuario", // Útil para que la IA te salude
         };
 
-        const response = await axios.post(
-          "https://n8n-production-fc0c.up.railway.app/webhook-test/worklyst-chat",
-          // "https://n8n-production-fc0c.up.railway.app/webhook/worklyst-chat",
-          payload,
-          {
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${localStorage.getItem("sessionToken")}`,
-              "x-api-key": process.env.NEXT_PUBLIC_AI_API_KEY,
-            },
+        const n8nUrl = process.env.NEXT_PUBLIC_N8N_URL || "";
+
+        const response = await axios.post(n8nUrl, payload, {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("sessionToken") || ""}`,
+            "x-api-key": process.env.NEXT_PUBLIC_AI_API_KEY || "",
           },
-        );
+        });
 
         // Importante: n8n suele devolver la respuesta en data.output o data.text
         // Ajusta esto según cómo configures el nodo de respuesta en n8n

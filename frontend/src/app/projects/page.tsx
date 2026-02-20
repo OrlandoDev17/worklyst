@@ -54,6 +54,7 @@ export default function ProjectsPage() {
   useEffect(() => {
     async function handleDataLoad() {
       if (mounted && user) {
+        setIsDataReady(false);
         await fetchProjects();
         setIsDataReady(true);
       }
@@ -190,6 +191,7 @@ export default function ProjectsPage() {
                   onDelete={(p) => setProjectToDelete(p)}
                   onAddMember={(p) => setProjectToAddMember(p)}
                   onRemoveMember={(p) => setProjectToRemoveMember(p)}
+                  isLoading={states.loading}
                 />
               </li>
             ))}

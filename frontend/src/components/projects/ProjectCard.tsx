@@ -26,6 +26,7 @@ interface ProjectCardProps extends Project {
   onDelete: (project: Project) => void;
   onAddMember: (project: Project) => void;
   onRemoveMember: (project: Project) => void;
+  isLoading?: boolean;
 }
 
 export function ProjectCard(props: ProjectCardProps) {
@@ -43,6 +44,7 @@ export function ProjectCard(props: ProjectCardProps) {
     onRemoveMember,
     totalTareas,
     tareasCompletadas,
+    isLoading,
   } = props;
   const [showDropdown, setShowDropdown] = useState(false);
 
@@ -134,7 +136,9 @@ export function ProjectCard(props: ProjectCardProps) {
             <Calendar className="size-3 text-blue-400" /> CREADO EL{" "}
             {formatDate(creadoEn)}
           </div>
-          <p className="text-gray-500 text-sm leading-relaxed line-clamp-3 relative">
+          <p
+            className={`text-gray-500 text-sm leading-relaxed line-clamp-3 relative transition-opacity duration-300 ${isLoading ? "opacity-50" : "opacity-100"}`}
+          >
             {descripcion || "Sin descripción disponible para este proyecto..."}
           </p>
 
@@ -173,7 +177,10 @@ export function ProjectCard(props: ProjectCardProps) {
 
           <div className="flex flex-col items-end">
             <span className="flex items-center gap-1.5 text-[9px] text-gray-400 uppercase font-black tracking-tighter">
-              <RefreshCw className="size-2.5" /> {formatDate(actualizadoEn)}
+              <RefreshCw
+                className={`size-2.5 ${isLoading ? "animate-spin text-blue-500" : ""}`}
+              />{" "}
+              {formatDate(actualizadoEn)}
             </span>
           </div>
         </footer>
