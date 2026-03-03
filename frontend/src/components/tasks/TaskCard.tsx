@@ -188,7 +188,7 @@ export function TaskCard(props: TaskCardProps) {
                 <UserPlus className="size-3" />
               </div>
               <span className="text-[9px] md:text-[10px] font-bold uppercase tracking-wider">
-                Asignar
+                Sin asignar
               </span>
             </div>
           )}
