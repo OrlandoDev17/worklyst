@@ -11,10 +11,18 @@ import { useTaskStatuses } from "@/contexts/TaskStatusesContext";
 import { Breadcrumbs } from "@/components/common/Breadcrumbs";
 import { MemberAvatar } from "@/components/common/MemberAvatar";
 import { Button } from "../common/Button";
-import { Plus } from "lucide-react";
+import { Plus, Pencil } from "lucide-react";
 import { BoardColumn } from "./BoardColumn";
 import { BoardColumnSkeleton } from "./skeleton/BoardColumnSkeleton";
 import dynamic from "next/dynamic";
+
+const CreateProjectModal = dynamic(
+  () =>
+    import("@/components/projects/CreateProjectModal").then(
+      (mod) => mod.CreateProjectModal,
+    ),
+  { ssr: false },
+);
 
 const AddTaskModal = dynamic(
   () => import("./AddTaskModal").then((mod) => mod.AddTaskModal),
@@ -39,11 +47,17 @@ export function ProjectDetails({ projectId }: { projectId: string }) {
   const [showAddTaskModal, setShowAddTaskModal] = useState(false);
   const [taskToEdit, setTaskToEdit] = useState<Task | null>(null);
   const [taskToDelete, setTaskToDelete] = useState<Task | null>(null);
+  const [showEditProjectModal, setShowEditProjectModal] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   const { mounted, user } = useAuth();
-  const { getProjectById, selectedProject, states, finishProject } =
-    useProjects();
+  const {
+    getProjectById,
+    selectedProject,
+    states,
+    finishProject,
+    updateProject,
+  } = useProjects();
   const {
     fetchTasks,
     tasks,
@@ -245,6 +259,15 @@ export function ProjectDetails({ projectId }: { projectId: string }) {
                 Proyecto Activo
               </span>
             </div>
+            {!showBoardSkeleton && (
+              <button
+                onClick={() => setShowEditProjectModal(true)}
+                className="p-2 rounded-xl text-gray-400 hover:bg-gray-100 hover:text-blue-600 transition-all active:scale-90"
+                title="Editar detalles del proyecto"
+              >
+                <Pencil className="size-5" />
+              </button>
+            )}
           </div>
 
           <div className="text-gray-500 text-sm 2xl:text-lg max-w-2xl leading-relaxed">
@@ -369,6 +392,19 @@ export function ProjectDetails({ projectId }: { projectId: string }) {
         closeModal={handleAddTaskModal}
         projectId={projectId}
       />
+
+      {showEditProjectModal && currentProject && (
+        <CreateProjectModal
+          showModal={showEditProjectModal}
+          setShowModal={setShowEditProjectModal}
+          initialData={currentProject}
+          onSubmit={async (data) => {
+            const success = await updateProject(projectId, data);
+            if (success) setShowEditProjectModal(false);
+            return success;
+          }}
+        />
+      )}
 
       {taskToEdit && (
         <AddTaskModal
