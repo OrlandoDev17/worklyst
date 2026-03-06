@@ -22,7 +22,21 @@ export function Message({ message, user = "customer" }: MessageProps) {
             : "bg-zinc-700 rounded-tl-xs"
         }`}
       >
-        <p>{message}</p>
+        <p
+          className="whitespace-pre-wrap leading-relaxed"
+          style={{ whiteSpace: "pre-wrap" }}
+        >
+          {message.split(/(\*\*.*?\*\*)/).map((part, i) => {
+            if (part.startsWith("**") && part.endsWith("**")) {
+              return (
+                <strong key={i} className="font-bold">
+                  {part.slice(2, -2)}
+                </strong>
+              );
+            }
+            return part;
+          })}
+        </p>
       </article>
     </div>
   );

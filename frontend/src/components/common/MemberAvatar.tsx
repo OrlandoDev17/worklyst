@@ -1,3 +1,5 @@
+import { Star } from "lucide-react";
+
 type AvatarSize = "sm" | "md" | "lg" | "xl" | "2xl";
 
 interface MemberAvatarProps {
@@ -6,6 +8,7 @@ interface MemberAvatarProps {
   color?: string;
   rounded?: "full" | "lg";
   className?: string;
+  isCreator?: boolean;
 }
 
 export function MemberAvatar({
@@ -14,6 +17,7 @@ export function MemberAvatar({
   color,
   rounded = "full",
   className,
+  isCreator = false,
 }: MemberAvatarProps) {
   const getInitials = (fullName: string) => {
     if (!fullName) return "?";
@@ -87,15 +91,23 @@ export function MemberAvatar({
   const roundedClass = rounded === "full" ? "rounded-full" : "rounded-lg";
 
   return (
-    <div
-      title={name || ""}
-      className={`${sizes[size].size} flex items-center justify-center ${roundedClass} bg-linear-to-br ${bgGradient} shadow-sm hover:scale-110 hover:z-20 transition-all duration-300 cursor-pointer ${className}`}
-    >
-      <span
-        className={`${sizes[size as AvatarSize].fontSize} text-white font-black tracking-tighter`}
+    <div className="relative inline-block">
+      <div
+        title={name || ""}
+        className={`${sizes[size].size} flex items-center justify-center ${roundedClass} bg-linear-to-br ${bgGradient} shadow-sm hover:scale-110 hover:z-50 transition-all duration-300 cursor-pointer ${className}`}
       >
-        {getInitials(name || "")}
-      </span>
+        <span
+          className={`${sizes[size as AvatarSize].fontSize} text-white font-black tracking-tighter`}
+        >
+          {getInitials(name || "")}
+        </span>
+      </div>
+
+      {isCreator && (
+        <div className="absolute -bottom-1 -right-1 bg-amber-400 p-1 rounded-full border border-white shadow-sm z-30">
+          <Star className="size-2 text-white fill-current" />
+        </div>
+      )}
     </div>
   );
 }

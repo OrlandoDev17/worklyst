@@ -26,28 +26,18 @@ export function Footer() {
           </p>
           <div className="flex items-center justify-center lg:justify-start gap-4 text-slate-400 mt-2">
             <a
-              href="#"
+              target="_blank"
+              rel="noopener noreferrer"
+              href="https://github.com/UnetiGrupo/workLyst"
               className="hover:text-blue-600 transition-colors hover:scale-110 transform duration-200"
               aria-label="Github"
             >
               Github
             </a>
             <a
-              href="#"
-              className="hover:text-blue-400 transition-colors hover:scale-110 transform duration-200"
-              aria-label="Twitter"
-            >
-              Twitter
-            </a>
-            <a
-              href="#"
-              className="hover:text-blue-700 transition-colors hover:scale-110 transform duration-200"
-              aria-label="LinkedIn"
-            >
-              LinkedIn
-            </a>
-            <a
-              href="#"
+              target="_blank"
+              rel="noopener noreferrer"
+              href="mailto:worklystuneti@gmail.com"
               className="hover:text-red-500 transition-colors hover:scale-110 transform duration-200"
               aria-label="Email"
             >
@@ -73,70 +63,63 @@ export function Footer() {
               </li>
               <li>
                 <Link
-                  href="/dashboard"
+                  href="/community"
                   className="hover:text-blue-600 transition-colors"
                 >
-                  Dashboard
+                  Comunidad
                 </Link>
               </li>
               <li>
                 <a href="#" className="hover:text-blue-600 transition-colors">
-                  Chat Inteligente
-                </a>
-              </li>
-              <li>
-                <a href="#" className="hover:text-blue-600 transition-colors">
-                  Integrantes
+                  Chat (Próximamente)
                 </a>
               </li>
             </ul>
           </div>
+
           <div className="flex flex-col gap-4">
             <h3 className="font-bold text-slate-900">Empresa</h3>
             <ul className="space-y-3 text-sm text-slate-500">
               <li>
-                <a href="#" className="hover:text-blue-600 transition-colors">
-                  Acerca de
-                </a>
+                <Link
+                  href="/"
+                  className="hover:text-blue-600 transition-colors"
+                >
+                  Inicio
+                </Link>
               </li>
               <li>
-                <a href="#" className="hover:text-blue-600 transition-colors">
-                  Carreras
-                </a>
-              </li>
-              <li>
-                <a href="#" className="hover:text-blue-600 transition-colors">
-                  Blog
-                </a>
-              </li>
-              <li>
-                <a href="#" className="hover:text-blue-600 transition-colors">
+                <a
+                  href="mailto:worklystuneti@gmail.com"
+                  className="hover:text-blue-600 transition-colors"
+                >
                   Contacto
                 </a>
               </li>
             </ul>
           </div>
+
           <div className="flex flex-col gap-4 col-span-2 md:col-span-1 items-center md:items-start">
             <h3 className="font-bold text-slate-900">Soporte</h3>
             <ul className="space-y-3 text-sm text-slate-500">
               <li>
-                <a href="#" className="hover:text-blue-600 transition-colors">
-                  Centro de Ayuda
-                </a>
-              </li>
-              <li>
-                <a href="#" className="hover:text-blue-600 transition-colors">
+                <a
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  href="/docs/Documentacion.pdf"
+                  className="hover:text-blue-600 transition-colors"
+                >
                   Documentación
                 </a>
               </li>
               <li>
-                <a href="#" className="hover:text-blue-600 transition-colors">
+                <a
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  href="https://worklyst.onrender.com/api-docs/#/"
+                  className="hover:text-blue-600 transition-colors"
+                >
                   API
-                </a>
-              </li>
-              <li>
-                <a href="#" className="hover:text-blue-600 transition-colors">
-                  Estado del Servicio
                 </a>
               </li>
             </ul>

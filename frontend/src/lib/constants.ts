@@ -8,9 +8,7 @@ import {
   Folder,
   Handshake,
   Home,
-  LayoutDashboard,
   Settings,
-  Timer,
   Users,
 } from "lucide-react";
 
@@ -79,7 +77,7 @@ export const FEATURES: Feature[] = [
     icon: Bot,
     title: "Agente IA Especializado",
     description:
-      "Obtén sugerencias inteligentes para organizar tareas y asignar trabajo según las habilidades del equipo.",
+      "Asigna tareas y organiza tu trabajo de forma eficiente pidiéndole exactamente lo que necesitas a nuestro agente.",
     iconColor: "text-blue-600",
     iconBgColor: "bg-blue-100",
   },
@@ -88,7 +86,7 @@ export const FEATURES: Feature[] = [
     icon: Handshake,
     title: "Colaboración en tiempo real",
     description:
-      "Trabaja con tu equipo en tiempo real con chat integrado y actualizaciones instantáneas.",
+      "Trabaja con tu equipo de forma fluida con estados y actualizaciones sincronizadas al instante.",
     iconColor: "text-green-600",
     iconBgColor: "bg-green-100",
   },
@@ -102,20 +100,11 @@ export const FEATURES: Feature[] = [
     iconBgColor: "bg-orange-100",
   },
   {
-    id: "timer",
-    icon: Timer,
-    title: "Gestión de Tiempo",
-    description:
-      "Seguimiento automático del tiempo y estimaciones inteligentes para una planificación precisa.",
-    iconColor: "text-purple-600",
-    iconBgColor: "bg-purple-100",
-  },
-  {
     id: "chart-no-axes-column",
     icon: ChartNoAxesColumn,
     title: "Análisis de Proyectos",
     description:
-      "Obtén análisis detallados de tus proyectos para identificar oportunidades de mejora y optimización.",
+      "Obtén informes detallados de tus proyectos generados por el agente para optimizar tu flujo de trabajo.",
     iconColor: "text-red-600",
     iconBgColor: "bg-red-100",
   },

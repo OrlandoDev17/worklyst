@@ -24,7 +24,10 @@ export const useN8n = () => {
           userName: user?.nombre || user?.usuario || "Usuario", // Útil para que la IA te salude
         };
 
-        const n8nUrl = process.env.NEXT_PUBLIC_N8N_URL || "";
+        const n8nUrl =
+          process.env.NEXT_PUBLIC_N8N_URL ||
+          process.env.NEXT_PUBLIC_N8N_TEST_URL ||
+          "";
 
         const response = await axios.post(n8nUrl, payload, {
           headers: {
@@ -34,20 +37,43 @@ export const useN8n = () => {
           },
         });
 
-        // Importante: n8n suele devolver la respuesta en data.output o data.text
-        // Ajusta esto según cómo configures el nodo de respuesta en n8n
+        // El agente de n8n devuelve la respuesta en data.output
         const data = response.data;
-        console.log("Respuesta de n8n:", data);
+        console.log("Respuesta completa de n8n:", data);
 
-        // Disparamos un evento global para que la UI se refresque (proyectos, tareas, etc)
-        window.dispatchEvent(new Event("refresh_worklyst_data"));
+        let assistantMessage = data.mensaje || "No se pudo obtener respuesta.";
+
+        // --- FORMATEAR MENSAJE PARA MEJOR LECTURA ---
+        // 1. Insertar saltos de línea antes de los números si no los hay
+        // 2. Asegurar que los puntos numerados empiecen en línea nueva
+        assistantMessage = assistantMessage
+          .replace(/(\d+\.)\s/g, "\n$1 ") // Saltos antes de "1. ", "2. ", etc.
+          .replace(/¿/g, "\n¿") // Saltos antes de preguntas finales para separarlas
+          .replace(/\.\s+(?=[A-ZÁÉÍÓÚ])/g, ".\n\n") // Doble salto después de punto seguido si empieza con mayúscula
+          .trim()
+          .split("\n")
+          .filter((line: string) => line.trim() !== "")
+          .join("\n\n");
+
+        console.log("Mensaje procesado para el usuario:", assistantMessage);
+
+        // --- DETECTAR ACCIONES DE ÉXITO PARA REFRESCAR ---
+        // Nueva lógica: metadata (cuando se detecte que no es null ni vacío se recargará)
+        if (
+          data.metadata !== null &&
+          data.metadata !== "" &&
+          data.metadata !== undefined
+        ) {
+          console.log("Detectada metadata válida, refrescando datos...");
+          // Disparamos el evento global para refrescar los datos sin perder el estado del chat
+          window.dispatchEvent(new Event("refresh_worklyst_data"));
+        }
 
         setMessages((prev) => [
           ...prev,
           {
             id: Date.now(),
-            text:
-              data.output || data.response || "No se pudo obtener respuesta.",
+            text: assistantMessage,
             user: "agent",
           },
         ]);

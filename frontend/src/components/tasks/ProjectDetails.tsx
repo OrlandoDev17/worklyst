@@ -13,9 +13,21 @@ import { MemberAvatar } from "@/components/common/MemberAvatar";
 import { Button } from "../common/Button";
 import { Plus } from "lucide-react";
 import { BoardColumn } from "./BoardColumn";
-import { AddTaskModal } from "./AddTaskModal";
-import { ConfirmDeletion } from "@/components/common/ConfirmDeletion";
 import { BoardColumnSkeleton } from "./skeleton/BoardColumnSkeleton";
+import dynamic from "next/dynamic";
+
+const AddTaskModal = dynamic(
+  () => import("./AddTaskModal").then((mod) => mod.AddTaskModal),
+  { ssr: false },
+);
+
+const ConfirmDeletion = dynamic(
+  () =>
+    import("@/components/common/ConfirmDeletion").then(
+      (mod) => mod.ConfirmDeletion,
+    ),
+  { ssr: false },
+);
 import { ProgressBar } from "@/components/common/ProggresBar";
 // Icons
 import { Circle, Clock, CheckCircle2 } from "lucide-react";
@@ -30,7 +42,8 @@ export function ProjectDetails({ projectId }: { projectId: string }) {
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   const { mounted, user } = useAuth();
-  const { getProjectById, selectedProject, states } = useProjects();
+  const { getProjectById, selectedProject, states, finishProject } =
+    useProjects();
   const {
     fetchTasks,
     tasks,
@@ -43,13 +56,15 @@ export function ProjectDetails({ projectId }: { projectId: string }) {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const initializedRef = useRef<string | null>(null);
 
-  const isProjectLoading = states.loading && !selectedProject;
+  // Detectar si la información en el contexto es de un proyecto anterior (Stale Data)
+  const isStale = selectedProject?.id !== projectId;
+
   const isInitialTaskLoad = tasksLoading && tasks.length === 0;
   const isStatusesLoading = statusesLoading && statuses.length === 0;
 
   // Decidimos que parte esta cargando
   const showBoardSkeleton =
-    isInitialTaskLoad || isStatusesLoading || isRefreshing;
+    isInitialTaskLoad || isStatusesLoading || isRefreshing || isStale;
 
   useEffect(() => {
     // Solo cargamos si tenemos montado el componente, el usuario y no hemos cargado este projectId ya
@@ -109,11 +124,14 @@ export function ProjectDetails({ projectId }: { projectId: string }) {
     }
   }, [showBoardSkeleton, selectedProject]);
 
-  // RECUPERAR TODOS LOS DATOS DEL PROYECTO
-  const { nombre, descripcion, miembros } = selectedProject || {};
+  // RECUPERAR TODOS LOS DATOS DEL PROYECTO (Solo si coinciden con el ID actual)
+  const currentProject = !isStale ? selectedProject : null;
+  const projectTasks = !isStale ? tasks : [];
+
+  const { nombre, descripcion, miembros, estado } = currentProject || {};
 
   // Calcular progreso dinámico basado en los mismos criterios que el tablero
-  const totalTasks = tasks.length;
+  const totalTasks = projectTasks.length;
 
   const completedStatus = statuses.find(
     (s) =>
@@ -125,7 +143,7 @@ export function ProjectDetails({ projectId }: { projectId: string }) {
       ),
   );
 
-  const completedTasks = tasks.filter((t) => {
+  const completedTasks = projectTasks.filter((t) => {
     if (!t.estado) return false;
     const estadoStr = String(t.estado).toLowerCase().trim();
     const completedKey = (completedStatus?.key || "___none___")
@@ -141,6 +159,26 @@ export function ProjectDetails({ projectId }: { projectId: string }) {
       ["completada", "completed", "completado", "terminada"].includes(estadoStr)
     );
   }).length;
+
+  useEffect(() => {
+    if (
+      totalTasks > 0 &&
+      completedTasks === totalTasks &&
+      selectedProject &&
+      estado !== "completed" &&
+      !tasksLoading // Asegurarnos de que no estamos en medio de una carga
+    ) {
+      finishProject(projectId);
+    }
+  }, [
+    totalTasks,
+    completedTasks,
+    estado,
+    projectId,
+    finishProject,
+    selectedProject,
+    tasksLoading,
+  ]);
 
   const breadcrumbsItems = [
     { label: "Inicio", href: "/" },
@@ -231,14 +269,20 @@ export function ProjectDetails({ projectId }: { projectId: string }) {
         <div className="flex flex-col sm:flex-row items-center gap-6 w-full md:w-auto">
           <ul className="flex items-center border-0 md:border-r border-gray-100 pr-6">
             {miembros ? (
-              miembros.map(({ id, nombre }) => (
-                <li key={id} className="-ml-3 first:ml-0 relative group/avatar">
-                  <MemberAvatar
-                    name={nombre}
-                    className="ring-4 ring-white shadow-md hover:ring-blue-400 hover:-translate-y-1 transition-all"
-                  />
-                </li>
-              ))
+              miembros
+                .sort((a, b) => (a.id === selectedProject?.creadorId ? -1 : 1))
+                .map(({ id, nombre }) => (
+                  <li
+                    key={id}
+                    className="-ml-3 first:ml-0 relative group/avatar"
+                  >
+                    <MemberAvatar
+                      name={nombre}
+                      className="ring-4 ring-white shadow-md hover:ring-blue-400 hover:-translate-y-1 transition-all"
+                      isCreator={id === selectedProject?.creadorId}
+                    />
+                  </li>
+                ))
             ) : (
               <div className="flex items-center -space-x-3 animate-pulse">
                 {[1, 2, 3].map((i) => (
@@ -284,38 +328,38 @@ export function ProjectDetails({ projectId }: { projectId: string }) {
         ) : (
           statuses
             .filter((status) => status.key !== "overdue")
-            .map((status) => (
-              <div
-                key={status.id}
-                className="column-anim shrink-0 w-[85vw] md:w-auto snap-center first:pl-2 first:md:pl-0 last:pr-4 last:md:pr-0"
-                style={{ opacity: 0 }}
-              >
-                <BoardColumn
-                  statusKey={status.key}
-                  column={status.name}
-                  count={
-                    tasks.filter(
-                      (task) =>
-                        String(task.estado) === String(status.key) ||
-                        String(task.estado) === String(status.name),
-                    ).length
-                  }
-                  Icon={getIconByStatus(status.key)}
-                  color={status.color}
-                  tasks={tasks.filter(
-                    (task) =>
-                      String(task.estado) === String(status.key) ||
-                      String(task.estado) === String(status.name),
-                  )}
-                  openModal={handleAddTaskModal}
-                  showAdd={
-                    status.key === "pending" || status.key === "pendiente"
-                  }
-                  onEditTask={(task) => setTaskToEdit(task)}
-                  onDeleteTask={(task) => setTaskToDelete(task)}
-                />
-              </div>
-            ))
+            .map((status) => {
+              // OPTIMIZATION: Combine iterations logic (vercel-react-best-practices js-combine-iterations)
+              // Filter tasks once per status instead of twice for count and tasks props
+              const statusTasks = projectTasks.filter(
+                (task) =>
+                  String(task.estado) === String(status.key) ||
+                  String(task.estado) === String(status.name),
+              );
+
+              return (
+                <div
+                  key={status.id}
+                  className="column-anim shrink-0 w-[85vw] md:w-auto snap-center first:pl-2 first:md:pl-0 last:pr-4 last:md:pr-0"
+                  style={{ opacity: 0 }}
+                >
+                  <BoardColumn
+                    statusKey={status.key}
+                    column={status.name}
+                    count={statusTasks.length}
+                    Icon={getIconByStatus(status.key)}
+                    color={status.color}
+                    tasks={statusTasks}
+                    openModal={handleAddTaskModal}
+                    showAdd={
+                      status.key === "pending" || status.key === "pendiente"
+                    }
+                    onEditTask={(task) => setTaskToEdit(task)}
+                    onDeleteTask={(task) => setTaskToDelete(task)}
+                  />
+                </div>
+              );
+            })
         )}
       </section>
 

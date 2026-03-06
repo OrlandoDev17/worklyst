@@ -5,9 +5,24 @@ import { useGroups } from "@/contexts/GroupContext";
 import { Button } from "@/components/common/Button";
 import { Plus, Users, ArrowRight, MoreVertical } from "lucide-react";
 import { MemberAvatar } from "@/components/common/MemberAvatar";
-import { AddGroupModal } from "@/components/community/AddGroupModal";
-import { EditGroupModal } from "@/components/community/EditGroupModal";
 import { Group } from "@/lib/types";
+import dynamic from "next/dynamic";
+
+const AddGroupModal = dynamic(
+  () =>
+    import("@/components/community/AddGroupModal").then(
+      (mod) => mod.AddGroupModal,
+    ),
+  { ssr: false },
+);
+
+const EditGroupModal = dynamic(
+  () =>
+    import("@/components/community/EditGroupModal").then(
+      (mod) => mod.EditGroupModal,
+    ),
+  { ssr: false },
+);
 
 export default function CommunityPage() {
   const { groups, fetchGroups, loading } = useGroups();
@@ -57,13 +72,15 @@ export default function CommunityPage() {
         </section>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {groups.map((group: Group) => (
-            <GroupCard
-              key={group.id}
-              group={group}
-              onEdit={() => setEditingGroup(group)}
-            />
-          ))}
+          {groups
+            .filter((g) => g.miembros && g.miembros.length > 0)
+            .map((group: Group) => (
+              <GroupCard
+                key={group.id}
+                group={group}
+                onEdit={() => setEditingGroup(group)}
+              />
+            ))}
         </div>
       )}
 
@@ -110,14 +127,18 @@ function GroupCard({ group, onEdit }: { group: Group; onEdit: () => void }) {
       <div className="flex items-center justify-between pt-4 border-t border-gray-50 mt-auto">
         {/* Avatares de Miembros */}
         <div className="flex -space-x-2">
-          {group.miembros?.slice(0, maxVisibleMembers).map((member) => (
-            <div key={member.id} className="relative group/avatar">
-              <MemberAvatar
-                name={member.nombre}
-                className="size-8 ring-2 ring-white shadow-sm"
-              />
-            </div>
-          ))}
+          {group.miembros
+            ?.sort((a, b) => (a.id === group.creador ? -1 : 1))
+            .slice(0, maxVisibleMembers)
+            .map((member) => (
+              <div key={member.id} className="relative">
+                <MemberAvatar
+                  name={member.nombre}
+                  className="size-8 ring-2 ring-white shadow-sm"
+                  isCreator={member.id === group.creador}
+                />
+              </div>
+            ))}
           {group.miembros && group.miembros.length > maxVisibleMembers && (
             <div className="size-8 rounded-full bg-blue-50 border-2 border-white flex items-center justify-center text-[10px] font-bold text-blue-600 shadow-sm">
               +{group.miembros.length - maxVisibleMembers}

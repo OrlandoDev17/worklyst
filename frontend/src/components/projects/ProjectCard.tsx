@@ -156,13 +156,14 @@ export function ProjectCard(props: ProjectCardProps) {
         <footer className="flex items-center justify-between pt-4 border-t border-gray-50 relative">
           <ul className="flex items-center">
             {miembros
-              .sort((a, b) => (a.rol === "owner" ? -1 : 1))
+              .sort((a, b) => (a.id === props.creadorId ? -1 : 1))
               .slice(0, maxVisibleMembers)
               .map((miembro) => (
                 <li className="-ml-2.5 first:ml-0 relative" key={miembro.id}>
                   <MemberAvatar
                     name={miembro?.nombre}
                     className="ring-4 ring-white shadow-sm"
+                    isCreator={miembro.id === props.creadorId}
                   />
                 </li>
               ))}

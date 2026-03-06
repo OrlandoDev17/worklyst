@@ -9,6 +9,12 @@ import { useTasks } from "@/contexts/TasksContext";
 import { useProjects } from "@/contexts/ProjectsContext";
 import { Task, User } from "@/lib/types";
 import { Button } from "@/components/common/Button";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import { registerLocale } from "react-datepicker";
+import { es } from "date-fns/locale/es";
+
+registerLocale("es", es);
 
 interface AddTaskModalProps {
   closeModal: () => void;
@@ -28,6 +34,7 @@ export function AddTaskModal({
 
   // Estado para el usuario seleccionado
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [deadline, setDeadline] = useState<Date | null>(null);
 
   const { createTask, updateTask } = useTasks();
   const { selectedProject } = useProjects(); // Necesario para buscar el usuario al editar
@@ -52,9 +59,16 @@ export function AddTaskModal({
           email: userFound.email || "",
         } as User);
       }
+
+      if (taskToEdit.fecha_limite) {
+        setDeadline(new Date(taskToEdit.fecha_limite));
+      } else {
+        setDeadline(null);
+      }
     } else if (!showModal) {
       // Limpiar al cerrar
       setSelectedUser(null);
+      setDeadline(null);
     }
   }, [taskToEdit, showModal, selectedProject]);
 
@@ -74,20 +88,13 @@ export function AddTaskModal({
     const rawDate = formData.get("fecha_limite") as string;
 
     // 2. Convertir a ISO string completo para la Base de Datos
-    // (Ej: "2026-02-04" -> "2026-02-04T00:00:00.000Z")
-    let isoDate = undefined;
-    if (rawDate) {
-      const dateObj = new Date(rawDate);
-      // Ajuste opcional: asegurar que no reste un día por zona horaria si es necesario,
-      // pero new Date(string) suele funcionar bien.
-      isoDate = dateObj.toISOString();
-    }
+    const isoDate = deadline ? deadline.toISOString() : undefined;
 
     const taskData: Partial<Task> = {
       titulo: formData.get("titulo") as string,
       descripcion: formData.get("descripcion") as string,
       fecha_limite: isoDate,
-      asignado_a: selectedUser ? selectedUser.id : undefined, // Enviamos solo el ID
+      asignado_a: selectedUser ? selectedUser.id : undefined,
       estado: taskToEdit ? taskToEdit.estado : "pendiente",
     };
 
@@ -99,9 +106,9 @@ export function AddTaskModal({
     }
 
     if (success) {
-      // Solo resetear y cerrar si la operación fue exitosa
       setSelectedUser(null);
-      (e.target as HTMLFormElement).reset(); // Resetear el formulario HTML
+      setDeadline(null);
+      (e.target as HTMLFormElement).reset();
       closeModal();
     }
   };
@@ -158,16 +165,21 @@ export function AddTaskModal({
             />
           </div>
 
-          {/* Fecha Límite */}
+          {/* Fecha Límite con react-datepicker */}
           <div className="flex flex-col gap-1">
             <label className="text-sm font-bold text-gray-800">
               Fecha límite
             </label>
-            <input
-              type="date"
-              name="fecha_limite"
-              defaultValue={getInputDate(taskToEdit?.fecha_limite)}
-              className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:border-blue-500 transition-all text-gray-600"
+            <DatePicker
+              selected={deadline}
+              onChange={(date: Date | null) => setDeadline(date)}
+              dateFormat="dd/MM/yyyy"
+              placeholderText="Seleccionar fecha"
+              locale="es"
+              minDate={new Date()}
+              isClearable
+              className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all text-gray-600 cursor-pointer"
+              wrapperClassName="w-full"
             />
           </div>
 

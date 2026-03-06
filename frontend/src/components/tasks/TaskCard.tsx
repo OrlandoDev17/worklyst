@@ -106,23 +106,60 @@ export function TaskCard(props: TaskCardProps) {
     },
   ];
 
+  // 4. Lógica de urgencia (fecha próxima o vencida)
+  const getDeadlineStatus = () => {
+    if (!fecha_limite || estado === "completada") return "normal";
+
+    const now = new Date();
+    const deadlineDate = new Date(fecha_limite);
+    const diffDays = Math.ceil(
+      (deadlineDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24),
+    );
+
+    if (diffDays < 0) return "overdue";
+    if (diffDays <= 3) return "urgent";
+    return "normal";
+  };
+
+  const deadlineStatus = getDeadlineStatus();
+
   return (
     <article
       draggable
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
-      className="flex flex-col gap-3 p-3 md:p-4 bg-white rounded-2xl border border-gray-100 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.05)] 
-                 hover:shadow-[0_8px_24px_-8px_rgba(0,0,0,0.12)] hover:border-blue-200 hover:-translate-y-1 transition-all duration-300 group 
-                 cursor-grab active:cursor-grabbing relative overflow-hidden"
+      className={`flex flex-col gap-3 p-3 md:p-4 bg-white rounded-2xl border shadow-[0_2px_8px_-2px_rgba(0,0,0,0.05)] 
+                 hover:shadow-[0_8px_24px_-8px_rgba(0,0,0,0.12)] hover:-translate-y-1 transition-all duration-300 group 
+                 cursor-grab active:cursor-grabbing relative overflow-hidden
+                 ${
+                   deadlineStatus === "overdue"
+                     ? "border-red-200 bg-red-50/10"
+                     : deadlineStatus === "urgent"
+                       ? "border-amber-200 bg-amber-50/10"
+                       : "border-gray-100 hover:border-blue-200"
+                 }`}
     >
       {/* Indicador lateral sutil */}
       <div
-        className="absolute left-0 top-0 bottom-0 w-1 opacity-0 group-hover:opacity-100 transition-opacity"
-        style={{ backgroundColor: statusInfo?.color }}
+        className={`absolute left-0 top-0 bottom-0 w-1 transition-opacity ${deadlineStatus !== "normal" ? "opacity-100" : "opacity-0 group-hover:opacity-100"}`}
+        style={{
+          backgroundColor:
+            deadlineStatus === "overdue"
+              ? "#ef4444"
+              : deadlineStatus === "urgent"
+                ? "#f59e0b"
+                : statusInfo?.color,
+        }}
       />
 
       <header className="flex items-start justify-between gap-2">
-        <h3 className="font-bold text-gray-800 text-[13px] md:text-sm leading-snug line-clamp-2 group-hover:text-blue-600 transition-colors">
+        <h3
+          className={`font-bold text-[13px] md:text-sm leading-snug line-clamp-2 transition-colors ${
+            deadlineStatus === "overdue"
+              ? "text-red-700"
+              : "text-gray-800 group-hover:text-blue-600"
+          }`}
+        >
           {titulo}
         </h3>
         <div className="relative shrink-0">
@@ -159,8 +196,6 @@ export function TaskCard(props: TaskCardProps) {
         >
           {statusInfo?.name || estado}
         </span>
-
-        {/* Aquí se pueden añadir tags o prioridades en el futuro */}
       </div>
 
       <div className="h-px bg-linear-to-r from-transparent via-gray-100 to-transparent w-full my-1" />
@@ -170,7 +205,11 @@ export function TaskCard(props: TaskCardProps) {
         <div className="flex items-center gap-2">
           {assignedUser ? (
             <div
-              className="flex items-center gap-2 p-0.5 pr-2 rounded-full bg-gray-50 group-hover:bg-blue-50 transition-colors border border-transparent group-hover:border-blue-100"
+              className={`flex items-center gap-2 p-0.5 pr-2 rounded-full transition-colors border border-transparent ${
+                deadlineStatus === "overdue"
+                  ? "bg-red-50 border-red-100"
+                  : "bg-gray-50 group-hover:bg-blue-50 group-hover:border-blue-100"
+              }`}
               title={assignedUser.nombre}
             >
               <MemberAvatar
@@ -196,11 +235,15 @@ export function TaskCard(props: TaskCardProps) {
 
         {/* Fecha Límite */}
         <div
-          className={`flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-[9px] md:text-[10px] font-bold shadow-sm border
+          className={`flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-[9px] md:text-[10px] font-bold shadow-sm border transition-colors
           ${
             estado === "completada"
               ? "bg-green-50 text-green-600 border-green-100"
-              : "bg-gray-50 text-gray-500 border-gray-100"
+              : deadlineStatus === "overdue"
+                ? "bg-red-500 text-white border-red-600 animate-pulse"
+                : deadlineStatus === "urgent"
+                  ? "bg-amber-100 text-amber-700 border-amber-200"
+                  : "bg-gray-50 text-gray-500 border-gray-100"
           }`}
         >
           <Calendar className="size-3" />

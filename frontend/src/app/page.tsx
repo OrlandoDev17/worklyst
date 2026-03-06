@@ -67,7 +67,7 @@ export default function Home() {
           </p>
           <div className="flex flex-wrap gap-4 hero-text">
             <Button href="/register">
-              Comenzar Gratis
+              Probar ahora
               <ArrowRight className="size-5" />
             </Button>
           </div>
@@ -101,7 +101,7 @@ export default function Home() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 feature-grid">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 feature-grid">
           {FEATURES.map((feature) => (
             <div key={feature.id} className="feature-card" aria-hidden="true">
               <FeatureCard
@@ -115,7 +115,7 @@ export default function Home() {
           ))}
 
           <article
-            className="md:col-span-1 lg:col-span-3 bg-white
+            className="md:col-span-2 lg:col-span-4 bg-white
             p-8 rounded-2xl flex flex-col justify-center items-start cta-container"
           >
             <h3 className="text-2xl font-bold mb-2 cta">
@@ -127,7 +127,7 @@ export default function Home() {
             </p>
             <div aria-hidden="true" className="cta">
               <Button href="/register">
-                Comenzar ahora
+                Probar ahora
                 <ArrowRight className="size-5" />
               </Button>
             </div>

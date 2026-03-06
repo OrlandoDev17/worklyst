@@ -26,6 +26,7 @@ interface ProjectsContextType {
   deleteProject: (id: string) => Promise<boolean>;
   addMember: (id: string, userId: string, rolId: 0 | 1) => Promise<boolean>;
   removeMember: (id: string, userId: string) => Promise<boolean>;
+  finishProject: (id: string) => Promise<boolean>;
 }
 
 const ProjectsContext = createContext<ProjectsContextType | undefined>(
@@ -316,6 +317,46 @@ export function ProjectsProvider({ children }: { children: React.ReactNode }) {
     ],
   );
 
+  const finishProject = useCallback(
+    async (id: string) => {
+      if (!mounted || !user) return false;
+      startAction();
+      try {
+        await axios.post(
+          `${API_URL}/api/projects/${id}/finish`,
+          {},
+          getAuthHeaders(),
+        );
+
+        // Fetch el proyecto actualizado
+        const projectResponse = await axios.get(
+          `${API_URL}/api/projects/${id}`,
+          getAuthHeaders(),
+        );
+
+        updateLocalProjectState(projectResponse.data);
+        setStates((prev) => ({ ...prev, loading: false, success: true }));
+        addToast("Proyecto completado con éxito", "success");
+        return true;
+      } catch (error: any) {
+        const msg =
+          error.response?.data?.mensaje || "No se pudo finalizar el proyecto";
+        addToast(msg, "error");
+        setStates({ loading: false, error: msg, success: false });
+        return false;
+      }
+    },
+    [
+      mounted,
+      user,
+      API_URL,
+      getAuthHeaders,
+      addToast,
+      updateLocalProjectState,
+      startAction,
+    ],
+  );
+
   return (
     <ProjectsContext.Provider
       value={{
@@ -331,6 +372,7 @@ export function ProjectsProvider({ children }: { children: React.ReactNode }) {
         deleteProject,
         addMember,
         removeMember,
+        finishProject,
       }}
     >
       {children}
